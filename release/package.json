@@ -1,0 +1,24 @@
+{
+  "name": "reelbalance-public-source",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ReelBalance source with invented fixtures and private evidence provisioning",
+  "license": "MIT",
+  "author": { "name": "Atikur Rahman", "url": "https://github.com/atikur" },
+  "type": "module",
+  "engines": { "node": ">=22.19.0" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env.local scripts/public-start.mjs",
+    "dev": "node --env-file-if-exists=.env.local scripts/public-start.mjs",
+    "test": "node --test scripts/public-smoke.test.mjs",
+    "setup:openai": "node scripts/setup-openai.mjs",
+    "provision:private": "node scripts/public-provision.mjs",
+    "runtime:rehearse": "node scripts/public-rehearse.mjs",
+    "public:export": "node scripts/public-export.mjs",
+    "operator:status": "node --env-file-if-exists=.env.local scripts/provider-admin.mjs status",
+    "operator:recover": "node --env-file-if-exists=.env.local scripts/provider-admin.mjs recover-openai",
+    "assistant:check": "node --env-file-if-exists=.env.local scripts/check-assistant.mjs",
+    "docker:verify": "node scripts/docker-verify.mjs"
+  },
+  "devDependencies": { "@qloo/qloo-harness": "0.1.26" }
+}

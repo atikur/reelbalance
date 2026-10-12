@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "name": "ReelBalance public source package",
+  "kind": "source_and_synthetic_fixtures",
+  "generatedAt": "2026-10-12T17:34:14.741Z",
+  "data": {
+    "syntheticOnly": true,
+    "containsApiResponses": false,
+    "containsRecordedModelResponses": false
+  },
+  "excluded": [
+    ".git",
+    ".env",
+    ".env.local",
+    ".cache",
+    "app/data",
+    "eval",
+    "results",
+    "reports",
+    "node_modules"
+  ],
+  "files": [
+    {
+      "path": ".dockerignore",
+      "bytes": 279,
+      "sha256": "fb8106b379e08868f31688e1693a49a94d189c21f1771799d94f81d32039298c"
+    },
+    {
+      "path": ".env.example",
+      "bytes": 2367,
+      "sha256": "17ae560ad9960fe40ad5eb99a7b92bee7da32f90021e6b211a11e6a8eddbe917"
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "bytes": 638,
+      "sha256": "be09be51b44d7695a82fe3ff8a986c9cc01cd7775726cb43db63c609faf982a2"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 107,
+      "sha256": "7686d2e1bd697dfa9971032650cca44b63f7395240dd557d4a1b12a482e3c14e"
+    },
+    {
+      "path": "app/agent-service.mjs",
+      "bytes": 36720,
+      "sha256": "61c25cbc8308d2070ae04e914b7ef9aa861222b5d5585a7b9055412c550c9c15"
+    },
+    {
+      "path": "app/demo-service.mjs",
+      "bytes": 6278,
+      "sha256": "2ce7af2291276635dff7766a7a721913e1ca06aa15a39a542df49f2c38873796"
+    },
+    {
+      "path": "app/programme-service.mjs",
+      "bytes": 12311,
+      "sha256": "17e4f57ddd7c74e43756297eaf39716be6ac03480d3348406288b3af0599d442"
+    },
+    {
+      "path": "app/public-access.mjs",
+      "bytes": 28155,
+      "sha256": "020524448168e5fc150a14063fba814ac73b41131db3e52e364fd24e05026be5"
+    },
+    {
+      "path": "app/public-access.test.mjs",
+      "bytes": 49295,
+      "sha256": "7446d27f03ee1f83199ec6e7de3dfa9b513ff94908f4a7f0cb4bdce3b936c1cb"
+    },
+    {
+      "path": "app/public-http.test.mjs",
+      "bytes": 41537,
+      "sha256": "d8554d6c8f0e02fb5bc55942042b437321e5965cc93877497d33b46108c17d2f"
+    },
+    {
+      "path": "app/public-ui.test.mjs",
+      "bytes": 35989,
+      "sha256": "262f3be78fd7d23838a3dcb382526f3725b4ef3927b82b0b048fde15e5666b92"
+    },
+    {
+      "path": "app/public/app.js",
+      "bytes": 75129,
+      "sha256": "c4ad090cb5fed35f6ce4dbdf62502b077da5f56e1d6660a9bfb565153f7d7643"
+    },
+    {
+      "path": "app/public/favicon.svg",
+      "bytes": 410,
+      "sha256": "d7e2acfaca2a8a2a6533c62e05687eb76bdf870abb68e1a680c0c159f17f8169"
+    },
+    {
+      "path": "app/public/index.html",
+      "bytes": 5916,
+      "sha256": "2eb6df888e4dd36cc162a4a5a595ab129d70e672f1e75df44f3a5b63594dff96"
+    },
+    {
+      "path": "app/public/state.js",
+      "bytes": 27599,
+      "sha256": "2b3db15c6a2c70009bd21952a885a259163341f73402bab0fc6b7f511019122f"
+    },
+    {
+      "path": "app/public/styles.css",
+      "bytes": 59103,
+      "sha256": "1f2725518ed775d65c8e986d28c0d0086e1c2f0860f44cb5484f2038870d32b9"
+    },
+    {
+      "path": "app/qloo-runtime.mjs",
+      "bytes": 11360,
+      "sha256": "6e86cbf86c7e9e6f6aa2313b8744e821d2c6d2a5b4b242a608dba9ea30ef1725"
+    },
+    {
+      "path": "app/qloo-runtime.test.mjs",
+      "bytes": 9801,
+      "sha256": "ecb6b60abb5de9732556e891e60563b4a7aa2bc2caee93fc83ae86e46cc9f8c6"
+    },
+    {
+      "path": "app/server.mjs",
+      "bytes": 28984,
+      "sha256": "2cb5551995d2e5350f1534d94ee67ba29b82c0a4439c020c647524db2fefdffa"
+    },
+    {
+      "path": "app/taste-service.mjs",
+      "bytes": 21851,
+      "sha256": "80d494fbf4d4fa612501194f197eb73d9c06d6f4277fcf1f280e22b1507ad32d"
+    },
+    {
+      "path": "app/taste-service.test.mjs",
+      "bytes": 13699,
+      "sha256": "fae3a2a489241712b42cc4b162660cce247b842ecd58b33ffe233510ff06b307"
+    },
+    {
+      "path": "Dockerfile",
+      "bytes": 1264,
+      "sha256": "9bea0c4cffd8dcadf0bed67c0cbca8b0ec8d0761ff1fbb049c48a0b13417273e"
+    },
+    {
+      "path": "docs/deployment.md",
+      "bytes": 37523,
+      "sha256": "84ce83114824b10ee7d391ea6f24e2aeb45d356eed398991cf9d6c8fcf645045"
+    },
+    {
+      "path": "docs/judge-demo.md",
+      "bytes": 11985,
+      "sha256": "ae4f2e5bfd3352dc79a6811a7b52d7825ff221e08d87da0bd264a7434ec6b9fd"
+    },
+    {
+      "path": "docs/submission-draft.md",
+      "bytes": 12144,
+      "sha256": "6e54ffef2e39240d173f9270c7b63d31892f67de0e3b80daba198ceac6d44365"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1099,
+      "sha256": "72e16d0ff4252e7e843496bffa234375cecf218492d613bb18c084ada30e98b4"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 77099,
+      "sha256": "3c9b82ea1418e194c9a2a7dd79a1d4658b61eea6de9b11a6170fdf23bf1ee37c"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1415,
+      "sha256": "756e35a31ffae85392c28bc4b2ad24b53162c1fa852774ff63682d277542891c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 19067,
+      "sha256": "6e80766ddd48e1bb18c739f2877ac46e935657e8ab0f24f2c5afbbf67293811a"
+    },
+    {
+      "path": "release/.dockerignore",
+      "bytes": 279,
+      "sha256": "fb8106b379e08868f31688e1693a49a94d189c21f1771799d94f81d32039298c"
+    },
+    {
+      "path": "release/.env.example",
+      "bytes": 2367,
+      "sha256": "17ae560ad9960fe40ad5eb99a7b92bee7da32f90021e6b211a11e6a8eddbe917"
+    },
+    {
+      "path": "release/.github/workflows/check.yml",
+      "bytes": 638,
+      "sha256": "be09be51b44d7695a82fe3ff8a986c9cc01cd7775726cb43db63c609faf982a2"
+    },
+    {
+      "path": "release/.gitignore",
+      "bytes": 107,
+      "sha256": "7686d2e1bd697dfa9971032650cca44b63f7395240dd557d4a1b12a482e3c14e"
+    },
+    {
+      "path": "release/Dockerfile",
+      "bytes": 1264,
+      "sha256": "9bea0c4cffd8dcadf0bed67c0cbca8b0ec8d0761ff1fbb049c48a0b13417273e"
+    },
+    {
+      "path": "release/package.json",
+      "bytes": 1200,
+      "sha256": "2dd97075eeb7b4d7f2e0913a36b717e626d8e12d3803b7b6c199b693a1fcf9b5"
+    },
+    {
+      "path": "release/public-smoke.test.mjs",
+      "bytes": 7202,
+      "sha256": "431284e72d43d2a0747c606c36fa8c8cc5e850e115baa07c672f3a56bd02d46d"
+    },
+    {
+      "path": "release/README.md",
+      "bytes": 19067,
+      "sha256": "6e80766ddd48e1bb18c739f2877ac46e935657e8ab0f24f2c5afbbf67293811a"
+    },
+    {
+      "path": "release/synthetic-data.json",
+      "bytes": 11412,
+      "sha256": "51c2514343c4ac0ea10e7ad79fdcf37b2c9801a1bcb34744c6d6a2da242c7d50"
+    },
+    {
+      "path": "scripts/check-assistant.mjs",
+      "bytes": 2704,
+      "sha256": "1b75d2ee5695872b0912a0b66ff1b743b2156591fde193632ded315f2dd3757b"
+    },
+    {
+      "path": "scripts/check-assistant.test.mjs",
+      "bytes": 2534,
+      "sha256": "c026108d25c5459ae80bacc18feab5900f76c6a48cd655d86f096c1e825d2cac"
+    },
+    {
+      "path": "scripts/docker-verify.mjs",
+      "bytes": 27940,
+      "sha256": "ce7792a11e0e203f8f36e135ce4127479fbd749f64fbf35f7819b4c85856e89d"
+    },
+    {
+      "path": "scripts/patch-qloo-dependencies.mjs",
+      "bytes": 3779,
+      "sha256": "d41ddde3f6e22ca3101aca3701200810925b2694c501e66be21b9d5b76a3d2e7"
+    },
+    {
+      "path": "scripts/provider-admin.mjs",
+      "bytes": 9508,
+      "sha256": "113d45205fe1f62f061b6e1bc97b374d7d3e226b14fa607058a79e240da9f8d9"
+    },
+    {
+      "path": "scripts/provider-admin.test.mjs",
+      "bytes": 23822,
+      "sha256": "20fb35759d47a9c60090e0f2ab5adbf15e933a5fb01b13473db11547ac60c8da"
+    },
+    {
+      "path": "scripts/public-export.mjs",
+      "bytes": 10618,
+      "sha256": "b55b7651d31e9715726e9bc9bd61684dcbdffe98bb2f074200334b1607dff68d"
+    },
+    {
+      "path": "scripts/public-provision.mjs",
+      "bytes": 3694,
+      "sha256": "c2928fe282451024a7f8d31eff908072acef74238558ee4275f7160b415bf7cc"
+    },
+    {
+      "path": "scripts/public-rehearse.mjs",
+      "bytes": 10587,
+      "sha256": "14dd74855ef76498f5a096af3372daa5b42a12344cfb158953e41c8725abb247"
+    },
+    {
+      "path": "scripts/public-smoke.test.mjs",
+      "bytes": 7202,
+      "sha256": "431284e72d43d2a0747c606c36fa8c8cc5e850e115baa07c672f3a56bd02d46d"
+    },
+    {
+      "path": "scripts/public-start.mjs",
+      "bytes": 2023,
+      "sha256": "c3e89ec919e6a2a411944acb41476ce02bea6bae437dfe35e9f5ab4c254deb0c"
+    },
+    {
+      "path": "scripts/qloo-fetch-guard.mjs",
+      "bytes": 5229,
+      "sha256": "1a153090c87526672c4926ead5769f0164bea010df2fea19b1b9c7ffbc75abd7"
+    },
+    {
+      "path": "scripts/qloo-security/package-lock.json",
+      "bytes": 1406,
+      "sha256": "61e7f0cdb6aa3b36f2791e01d91c105895b5f9a94c4b13a4c469ac975c2ad0f8"
+    },
+    {
+      "path": "scripts/qloo-security/package.json",
+      "bytes": 169,
+      "sha256": "7a07adda869e4e2508403e63d9c0e06b93215a15ec3d1b326a9abb1f484ac5c0"
+    },
+    {
+      "path": "scripts/reelbalance-solver.mjs",
+      "bytes": 2994,
+      "sha256": "f4397aedae64a6e16348983de8f556c00e337f1e3814257ffea9f10897fce37a"
+    },
+    {
+      "path": "scripts/setup-openai.mjs",
+      "bytes": 2980,
+      "sha256": "5027854e36a8123b693d8e1719e78ae9929cca808e5373bf0315eca70d022d04"
+    }
+  ]
+}

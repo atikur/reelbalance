@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.cache/
+private/
+app/data/
+eval/
+results/
+reports/
+*.log
+.DS_Store

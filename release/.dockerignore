@@ -1,0 +1,17 @@
+*
+!Dockerfile
+!package.json
+!package-lock.json
+!LICENSE
+!app/
+!app/**
+app/*.test.mjs
+app/data/
+!scripts/
+!scripts/*.mjs
+scripts/*.test.mjs
+!scripts/qloo-security/
+!scripts/qloo-security/package.json
+!scripts/qloo-security/package-lock.json
+!release/
+!release/synthetic-data.json

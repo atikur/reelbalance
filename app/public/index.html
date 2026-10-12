@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#244638">
+  <title>ReelBalance — the season desk</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to programme</a>
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <a class="brand" href="/" aria-label="ReelBalance home"><img src="/favicon.svg" width="35" height="35" alt=""><span>ReelBalance<span class="brand-sub">THE SEASON DESK</span></span></a>
+    <div class="workspace-label">YOUR WORKSPACE</div>
+    <nav class="navigation">
+      <button class="nav-item active" data-view="programme" aria-label="Programme" title="Programme" aria-current="page"><span class="nav-symbol">▤</span> Programme <span class="nav-index">01</span></button>
+      <button class="nav-item" data-view="catalogue" aria-label="Film shortlist" title="Film shortlist"><span class="nav-symbol">▦</span> Film shortlist <span class="nav-index">02</span></button>
+      <button class="nav-item" data-view="evidence" aria-label="Taste evidence" title="Taste evidence"><span class="nav-symbol">◎</span> Taste evidence <span class="nav-index">03</span></button>
+    </nav>
+    <div class="sidebar-note"><span class="tiny-label">A SMALL, CONSIDERED SEASON</span><p>Different tastes.<br>Decisions worth keeping.</p><div class="reel-line"><span></span><span></span><span></span><span></span><span></span></div></div>
+    <div class="sidebar-bottom"><span class="status-dot"></span><span><span id="workspace-mode">Season desk</span><br><small id="workspace-evidence-source">Loading taste evidence…</small></span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>EXAMPLE FILM CLUB <span class="topbar-divider">/</span> SEASON PLANNING</span><div class="topbar-actions"><button class="judge-entry" id="judge-login-button" type="button" data-action="judge-open" aria-haspopup="dialog" aria-controls="judge-dialog" hidden>Judge sign in</button><button class="text-button" id="owner-logout" data-action="owner-logout" hidden>Sign out organiser</button><button class="text-button" id="reset-button" type="button">↺ Reset example</button></div></header>
+    <main id="main" tabindex="-1">
+      <div id="app-content"><div class="loading-state"><span class="tiny-label">REELBALANCE</span><h1>Opening the season desk.</h1><p>Preparing your film shortlist and music references…</p></div></div>
+    </main>
+    <footer class="workspace-footer"><span>Made for the decisions between screenings.</span><span id="workspace-source-note">Qloo supplies taste evidence. You make the final call.</span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="film-dialog" aria-labelledby="film-dialog-title"><div id="film-dialog-content"></div></dialog>
+  <dialog id="judge-dialog" aria-labelledby="judge-dialog-title" aria-describedby="judge-access-reason"><div class="dialog-heading"><div><span class="tiny-label">JUDGE ACCESS</span><h2 id="judge-dialog-title">Extra headroom for judging</h2></div><button class="icon-button" data-close-dialog="judge-dialog" aria-label="Close judge access">×</button></div><p class="judge-access-note" id="judge-access-reason">All features are available without signing in. Judge access adds reserved Luna and Qloo allowance so you can keep evaluating when the public daily allowance is used.</p><p class="fact-note">Use the credentials supplied with the submission. Your current programme will be kept.</p><label class="form-label" for="judge-username">Username</label><input class="field" id="judge-username" type="text" value="judge" autocomplete="username" maxlength="80"><label class="form-label" for="judge-password">Password</label><input class="field" id="judge-password" type="password" autocomplete="current-password" maxlength="256"><p id="judge-error" class="agent-error" role="alert" hidden></p><div class="dialog-actions"><button class="button secondary" data-close-dialog="judge-dialog">Back to programme</button><button class="button primary" data-action="judge-signin">Sign in</button></div></dialog>
+  <dialog id="owner-dialog" aria-labelledby="owner-dialog-title"><div class="dialog-heading"><div><span class="tiny-label">ORGANISER ACCESS</span><h2 id="owner-dialog-title">Organiser access</h2></div><button class="icon-button" data-close-dialog="owner-dialog" aria-label="Close organiser access">×</button></div><p class="fact-note">Sign in with the organiser’s private access token for reserved live testing allowances. Judge credentials are provided separately with the submission.</p><label class="form-label" for="owner-token">Organiser access token</label><input class="field" id="owner-token" type="password" autocomplete="off" maxlength="256"><p id="owner-error" class="agent-error" role="alert" hidden></p><div class="dialog-actions"><button class="button secondary" data-close-dialog="owner-dialog">Back to programme</button><button class="button primary" data-action="owner-signin">Sign in</button></div></dialog>
+  <dialog id="sheet-dialog" aria-labelledby="sheet-dialog-title"><div class="dialog-heading"><div><span class="tiny-label">APPROVED PROGRAMME</span><h2 id="sheet-dialog-title">Your programme sheet</h2></div><button class="icon-button" data-close-dialog="sheet-dialog" aria-label="Close programme sheet">×</button></div><div id="sheet-preview"></div><div class="dialog-actions"><button class="button secondary" data-close-dialog="sheet-dialog">Back to workspace</button><a class="button primary" id="download-sheet" href="#" download="reelbalance-programme.html">Download HTML sheet <span>↓</span></a></div></dialog>
+</body>
+</html>
