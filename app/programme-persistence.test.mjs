@@ -237,3 +237,95 @@ test('recorded walkthroughs do not replace the real saved workspace, including a
   assert.equal(await createWorkspaceSnapshot({...state,mode:'recorded'}),null);
   assert.equal(await createWorkspaceSnapshot({...state,approved:{...state.approved,source:'recorded'}}),null);
 });
+
+test('approved export keeps night order and makes agreement, discrepancies and missing runtime evidence explicit',()=>{
+  const data=clone(base);
+  // Invented metadata exercises the genuine-evidence presentation branch only.
+  data.dataset.synthetic=false;
+  data.dataset.source='Injected fictional export-test evidence';
+  const state=approvedState(data);
+  const selected=state.approved.selection.map(id=>data.films.find(film=>film.id===id));
+  selected[0].runtime=94;selected[0].primaryRuntime=94;
+  selected[0].sourceUrl='https://example.invalid/film-facts';
+  selected[0].metadataNote='Injected identity check: source lists 2002; Qloo-year fixture lists 2001.';
+  selected[0].year=2001;
+  selected[1].runtime=96;selected[1].primaryRuntime=97;
+  selected[1].metadataNote='Injected source-runtime discrepancy must remain visible.';
+  selected[2].runtime=100;selected[2].primaryRuntime=null;
+  selected[2].metadataNote='No primary-source runtime recorded for this fixture.';
+  const html=makeSheetHtml(state);
+  assert.match(html,/94 min · planning and primary source agree/);
+  assert.match(html,/96 min planning · 97 min primary source/);
+  assert.match(html,/100 min planning · primary-source runtime not recorded/);
+  assert.match(html,/2001 \(Qloo year\)/);
+  assert.match(html,/source lists 2002; Qloo-year fixture lists 2001/);
+  assert.match(html,/Injected source-runtime discrepancy must remain visible/);
+  assert.match(html,/href="https:\/\/example\.invalid\/film-facts"/);
+  assert.match(html,/aria-label="Approved programme summary"/);
+  assert.match(html,/Up to 110 min per film/);
+  assert.deepEqual([...html.matchAll(/<h3>([^<]*)<\/h3>/g)].map(match=>match[1]),selected.map(film=>film.name));
+  assert.ok(html.indexOf('NIGHT 01')<html.indexOf('NIGHT 02')&&html.indexOf('NIGHT 02')<html.indexOf('NIGHT 03'));
+  assert.match(html,/Before screening:/);
+  assert.ok(html.includes(data.dataset.eligibility));
+  assert.ok(html.includes(data.dataset.runtimePolicy));
+});
+
+test('each exported film shows all original ranks, keeping outside-top-five and unknown evidence distinct',()=>{
+  const data=clone(base);
+  const state=approvedState(data);
+  const filmId=state.approved.selection[0];
+  data.profiles[0].ranks[filmId]=6;
+  delete data.profiles[1].ranks[filmId];
+  data.profiles[2].ranks[filmId]=2;
+  const html=makeSheetHtml(state);
+  const firstEntry=html.match(/<section class="sheet-entry">([\s\S]*?)<\/section>/)[1];
+  for(const profile of data.profiles)assert.ok(firstEntry.includes(profile.reference));
+  assert.match(firstEntry,/<strong>#6<\/strong><small>Outside top five<\/small>/);
+  assert.match(firstEntry,/<strong>Unknown<\/strong><small>No ranking evidence<\/small>/);
+  assert.match(firstEntry,/<strong>#2<\/strong><small>Top five<\/small>/);
+  assert.equal(data.profiles[0].ranks[filmId],6,'rendering does not promote rank six or mutate the evidence');
+  assert.equal(Object.hasOwn(data.profiles[1].ranks,filmId),false);
+  assert.match(html,/not a prediction of enjoyment or attendance/);
+  assert.ok(html.includes(data.dataset.disclosure));
+});
+
+test('export preserves synthetic, example, custom and recorded modes plus per-reference provenance',()=>{
+  const synthetic=makeSheetHtml(approvedState());
+  assert.match(synthetic,/APPROVED SYNTHETIC SETUP PROGRAMME/);
+  assert.match(synthetic,/Invented original ranks/);
+  assert.match(synthetic,/invented planning runtime/);
+  assert.doesNotMatch(synthetic,/Original Qloo ranks|planning and primary source agree/);
+  const data=clone(base);data.dataset.synthetic=false;
+  data.dataset.source='Injected fictional export-test evidence';data.dataset.checkedAt=time;
+  data.profiles.forEach(profile=>{profile.rankedAt=time;profile.rankSource='cached';});
+  const state=approvedState(data);
+  const example=makeSheetHtml(state);
+  assert.match(example,/APPROVED EXAMPLE PROGRAMME/);
+  assert.match(example,/Original Qloo ranks/);
+  assert.match(example,/Injected fictional export-test evidence snapshot from 13 October 2026/);
+  for(const profile of data.profiles)assert.ok(example.includes(`${profile.reference}: Saved Qloo evidence · 13 October 2026; 20/20 films scored.`));
+  assert.match(makeSheetHtml({...state,evidenceId:'rb-taste-'+ '9'.repeat(32)}),/APPROVED CUSTOM TASTE PROGRAMME/);
+  const recorded=makeSheetHtml({...state,mode:'recorded',approved:{...state.approved,source:'recorded'}});
+  assert.match(recorded,/APPROVED RECORDED DEMO PROGRAMME/);
+  assert.match(recorded,/this replay made zero new OpenAI or Qloo API requests/);
+  assert.match(recorded,/The organiser explicitly approved these example selections/);
+  assert.ok(recorded.includes(state.approved.approvedAt));
+});
+
+test('compact export escapes programme, reference, note and source text without silently claiming source verification',()=>{
+  const data=clone(base);data.dataset.synthetic=false;
+  data.profiles[0].reference='Fictional <reference> & friends';
+  const state=approvedState(data);
+  state.seasonName='A <season> & "name"';state.organiserNote='<img src="invalid" onerror="unsafe()">';
+  const selected=state.approved.selection.map(id=>data.films.find(film=>film.id===id));
+  selected[0].metadataNote='Source <note> & discrepancy';
+  selected[1].metadataNote='';selected[1].sourceUrl=null;selected[1].primaryRuntime=null;
+  const html=makeSheetHtml(state);
+  assert.match(html,/A &lt;season&gt; &amp; &quot;name&quot;/);
+  assert.match(html,/Fictional &lt;reference&gt; &amp; friends/);
+  assert.match(html,/Source &lt;note&gt; &amp; discrepancy/);
+  assert.match(html,/&lt;img src=&quot;invalid&quot; onerror=&quot;unsafe\(\)&quot;&gt;/);
+  assert.doesNotMatch(html,/<img|<reference>|<season>|<note>/);
+  assert.match(html,/No identity or runtime cross-check note recorded/);
+  assert.match(html,/Film facts source not recorded/);
+});

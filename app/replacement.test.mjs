@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { explainReplacement } from './public/replacement.js';
+import { explainReplacement, summarizeRepair } from './public/replacement.js';
 import { createProgrammeService } from './programme-service.mjs';
 
 // Invented film and artist identifiers; these ranks exercise the policy only.
@@ -117,4 +117,108 @@ test('reference and film names are returned as plain text for the caller to esca
   const explanation = explainReplacement(data, request(), proposed());
   assert.equal(explanation.added[0].name, '<film & title>');
   assert.match(explanation.summary, /<artist>/);
+});
+
+test('repair summary recomputes lost and proposed support while preserving actual locked positions', () => {
+  const data = fixture(), current = request(), target = structuredClone(current), result = proposed();
+  result.represented = 0;
+  result.evidence = [{ known_top_k_support: false, best_cached_rank: 20 }];
+  const before = structuredClone({ data, current, target, result });
+  assert.deepEqual(summarizeRepair(data, current, target, result), {
+    beforeSupport: 2, afterSupport: 3, referenceCount: 3, keptLockedNightCount: 2,
+    currentLimit: 110, proposedLimit: 110, limitUnchanged: true, nextState: 'proposed',
+  });
+  assert.deepEqual({ data, current, target, result }, before);
+});
+
+test('separate 117-minute option compares each side under its own brief and remains proposed', () => {
+  const data = fixture();
+  data.films.find(item => item.id === 'long-second').runtime = 117;
+  const current = request(), target = { ...request(), maximumRuntime: 117 };
+  const result = { ...proposed(), selection: ['locked-a', 'locked-c', 'long-second'],
+    nightOrder: ['locked-a', 'long-second', 'locked-c'] };
+  assert.deepEqual(summarizeRepair(data, current, target, result), {
+    beforeSupport: 2, afterSupport: 3, referenceCount: 3, keptLockedNightCount: 2,
+    currentLimit: 110, proposedLimit: 117, limitUnchanged: false, nextState: 'proposed',
+  });
+});
+
+test('two-night repair discloses a support shortfall instead of promoting original ranks', () => {
+  const current = { ...request(), slots: 2, current: ['locked-a', 'cancelled'], locked: ['locked-a'] };
+  const result = { status: 'coverage_shortfall', selection: ['locked-a', 'replacement'],
+    nightOrder: ['locked-a', 'replacement'], represented: 3 };
+  const summary = summarizeRepair(fixture(), current, structuredClone(current), result);
+  assert.equal(summary.beforeSupport, 1);
+  assert.equal(summary.afterSupport, 2);
+  assert.equal(summary.referenceCount, 3);
+  assert.equal(summary.keptLockedNightCount, 1);
+  assert.equal(summary.nextState, 'proposed');
+});
+
+test('valid unchanged review compares support without claiming a replacement or approval', () => {
+  const current = { ...request(), excluded: [] };
+  const result = { status: 'known_coverage_met', selection: [...current.current], nightOrder: [...current.current] };
+  const summary = summarizeRepair(fixture(), current, structuredClone(current), result);
+  assert.equal(summary.beforeSupport, 3);
+  assert.equal(summary.afterSupport, 3);
+  assert.equal(summary.keptLockedNightCount, 2);
+  assert.equal(summary.nextState, 'proposed');
+  assert.equal(Object.hasOwn(summary, 'approvedAt'), false);
+});
+
+test('unknown ranks and original rank six cannot create top-five support in the repair summary', () => {
+  const data = fixture();
+  delete data.profiles[1].ranks.replacement;
+  const result = { ...proposed(), selection: ['locked-a', 'locked-c', 'outside-five'],
+    nightOrder: ['locked-a', 'outside-five', 'locked-c'], represented: 3 };
+  const summary = summarizeRepair(data, request(), request(), result);
+  assert.equal(summary.beforeSupport, 2);
+  assert.equal(summary.afterSupport, 2);
+  data.profiles[1].ranks = {};
+  assert.equal(summarizeRepair(data, request(), request(), proposed()).afterSupport, 2);
+});
+
+test('before support excludes unavailable, ineligible and over-limit current films', () => {
+  const data = fixture();
+  const current = { ...request(), excluded: [], maximumRuntime: 95 };
+  assert.equal(summarizeRepair(data, current, { ...request(), excluded: [] }, proposed()).beforeSupport, 2);
+  data.films.find(item => item.id === 'cancelled').eligible = false;
+  assert.equal(summarizeRepair(data, { ...current, maximumRuntime: 110 }, { ...request(), excluded: [] }, proposed()).beforeSupport, 2);
+  data.films.find(item => item.id === 'replacement').eligible = false;
+  assert.equal(summarizeRepair(data, request(), request(), proposed()), null);
+});
+
+test('locked membership is insufficient when night positions shift or a lock disappears from the proposed brief', () => {
+  const result = proposed();
+  result.nightOrder = ['locked-c', 'replacement', 'locked-a'];
+  assert.equal(summarizeRepair(fixture(), request(), request(), result), null);
+  assert.equal(summarizeRepair(fixture(), request(), { ...request(), locked: ['locked-a'] }, proposed()), null);
+});
+
+test('a change to two nights cannot claim to keep a third-night lock in a new position', () => {
+  const target = { ...request(), slots: 2 };
+  const result = { status: 'coverage_shortfall', selection: ['locked-a', 'locked-c'],
+    nightOrder: ['locked-a', 'locked-c'] };
+  assert.equal(summarizeRepair(fixture(), request(), target, result), null);
+  const current = { ...request(), locked: ['locked-a'] };
+  const summary = summarizeRepair(fixture(), current, { ...target, locked: ['locked-a'] }, result);
+  assert.equal(summary.beforeSupport, 2);
+  assert.equal(summary.afterSupport, 2);
+  assert.equal(summary.keptLockedNightCount, 1);
+});
+
+test('initial, conflicting, unavailable, over-limit and malformed results have no repair summary', () => {
+  const data = fixture(), current = request(), result = proposed();
+  assert.equal(summarizeRepair(data, { ...current, current: [], locked: [] }, current, result), null);
+  assert.equal(summarizeRepair(data, current, current, { status: 'hard_conflict', selection: null }), null);
+  assert.equal(summarizeRepair(data, current, { ...current, maximumRuntime: 95 }, result), null);
+  assert.equal(summarizeRepair(data, current, { ...current, excluded: ['cancelled', 'replacement'] }, result), null);
+  assert.equal(summarizeRepair(data, current, current, { ...result, nightOrder: ['locked-a', 'replacement', 'replacement'] }), null);
+  assert.equal(summarizeRepair(data, current, current, { ...result, nightOrder: undefined }), null);
+  assert.equal(summarizeRepair(data, current, { ...current, current: [...current.current].reverse() }, result), null);
+  assert.equal(summarizeRepair(data, current, { ...current, maximumRuntime: 241 }, result), null);
+  const invalid = fixture(); invalid.profiles[1].ranks.replacement = -1;
+  assert.equal(summarizeRepair(invalid, current, current, result), null);
+  assert.equal(summarizeRepair({ ...data, films: [null] }, current, current, result), null);
+  assert.equal(summarizeRepair({ ...data, profiles: [null] }, current, current, result), null);
 });

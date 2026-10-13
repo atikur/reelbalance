@@ -45,6 +45,8 @@ class Element {
     .map(([key, value]) => [key.slice(5).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()), value])); }
   get disabled() { return Object.hasOwn(this.attributes, 'disabled'); }
   set disabled(value) { value ? this.setAttribute('disabled', '') : this.removeAttribute('disabled'); }
+  get open() { return Object.hasOwn(this.attributes, 'open'); }
+  set open(value) { value ? this.setAttribute('open', '') : this.removeAttribute('open'); }
   get classList() {
     const values = () => (this.attributes.class ?? '').split(/\s+/).filter(Boolean);
     return { contains: value => values().includes(value), toggle: (value, force) => {
@@ -497,7 +499,7 @@ test('judge sign-in keeps approved choices and unlocks reserved Luna capacity af
   assert.equal(ui.document.querySelector('[data-action="agent-send"]').disabled, false);
   assert.equal(ui.document.querySelector('#owner-logout').textContent, 'Sign out judge');
   assert.ok(ui.document.querySelector('[data-action="taste-open"]'));
-  assert.match(ui.document.querySelector('.response-details').textContent, /240/);
+  assert.match(ui.document.querySelector('.agent-panel .response-details').textContent, /240/);
   assert.equal(ui.document.querySelector('.agent-footer').textContent.includes('browser today'), false);
   assert.equal(ui.requests.some(request => request.path === '/api/agent' || request.path.startsWith('/api/tastes/')), false);
 });
@@ -721,4 +723,245 @@ test('retry aborts a stale restore when another tab changes storage during its p
   assert.ok(ui.document.querySelector('[data-action="workspace-retry"]'));
   assert.equal(progressCalls, 2);
   assert.equal(ui.requests.some(request => request.method === 'POST'), false);
+});
+
+function assertProgrammeBeforeTools(ui) {
+  const order = ui.document.querySelectorAll('.programme-stage, #programme-tools');
+  assert.equal(order.length, 2);
+  assert.ok(order[0].classList.contains('programme-stage'), 'the current decision appears before editing tools');
+  assert.equal(order[1].id, 'programme-tools');
+  assert.equal(order[1].tagName, 'DETAILS');
+}
+function repairSummaryValues(option) {
+  const summary = option.querySelector('.repair-summary');
+  assert.ok(summary, 'a pending repair has a computed comparison');
+  assert.equal(summary.getAttribute('aria-label'), 'Pending repair summary');
+  const terms = summary.querySelectorAll('dt');
+  const values = summary.querySelectorAll('dd');
+  assert.equal(terms.length, values.length);
+  return Object.fromEntries(terms.map((term, index) => [term.textContent.trim(), values[index].textContent.trim()]));
+}
+
+test('the initial page foregrounds Luna and moves a pending draft ahead of editing tools', async () => {
+  const ui = await harness({ handlers: { '/api/programme': ({ body }) => service.programme(body) } });
+  assert.equal(ui.document.querySelector('.page-heading h1').textContent, 'Keep the agreed nights.');
+  const initialOrder = ui.document.querySelectorAll('.agent-panel, .brief-panel, .programme-stage');
+  assert.ok(initialOrder[0].classList.contains('agent-panel'));
+  assert.ok(initialOrder[1].classList.contains('brief-panel'));
+  assert.ok(initialOrder[2].classList.contains('programme-stage'));
+  await ui.click('[data-action="plan"]');
+  assert.equal(ui.read().approved, null);
+  assert.ok(ui.read().proposal);
+  assert.match(ui.document.querySelector('.programme-panel h2').textContent, /draft programme/i);
+  assertProgrammeBeforeTools(ui);
+  assert.equal(ui.document.querySelector('.pending-approval').textContent, 'Pending approval');
+  assert.equal(ui.document.querySelector('[data-action="export"]').disabled, true);
+  assert.equal(ui.requests.some(request => ['/api/agent', '/api/tastes/search', '/api/tastes/rank'].includes(request.path)), false);
+});
+
+test('Luna launcher opens the composer and focuses its prompt without sending a request or changing approval', async () => {
+  const ui = await harness({ handlers: { '/api/programme': ({ body }) => service.programme(body) } });
+  await ui.click('[data-action="plan"]'); await ui.click('[data-action="approve"]');
+  assertProgrammeBeforeTools(ui);
+  assert.equal(ui.document.querySelector('#programme-tools').open, false);
+  const approved = ui.read().approved;
+  const count = ui.requests.length;
+  await ui.click('[data-action="compose-agent"]');
+  assert.equal(ui.document.querySelector('#programme-tools').open, true);
+  assert.equal(ui.document.activeElement, ui.document.querySelector('#agent-message'));
+  assert.match(ui.read().agentMessage, /Review my current programme/);
+  assert.deepEqual(ui.read().approved, approved);
+  assert.equal(ui.read().proposal, null);
+  assert.equal(ui.requests.length, count, 'opening the composer does not fetch or call a provider');
+  await ui.input('#agent-message', 'Keep this personally drafted question.');
+  await ui.click('[data-action="compose-agent"]');
+  assert.equal(ui.read().agentMessage, 'Keep this personally drafted question.');
+  await ui.click('[data-view="evidence"]'); await ui.click('[data-view="programme"]');
+  assert.equal(ui.document.querySelector('#programme-tools').open, true, 'an intentional open composer survives rerender');
+  assert.equal(ui.requests.length, count);
+});
+
+test('restored approval without a receipt has a state-aware sidebar and distinguishes an unresolved decision', async () => {
+  let original = reducers.createState(fixture);
+  original = reducers.approveProposal(reducers.receiveProposal(original,
+    { result: service.programme(reducers.planningRequest(original)) }, original.revision));
+  original.locked = [original.approved.selection[0]];
+  const storage = new Map([[persistence.STORAGE_KEY, JSON.stringify(await persistence.createWorkspaceSnapshot(original))]]);
+  const ui = await harness({ storage, handlers: { '/api/repair-options': ({ body }) => service.repairOptions(body) } });
+  assert.equal(ui.read().receipt, null);
+  assertProgrammeBeforeTools(ui);
+  const sidebar = ui.document.querySelector('.decision-sidebar');
+  assert.equal(sidebar.querySelector('.tiny-label').textContent, 'YOUR APPROVED PROGRAMME');
+  assert.equal(sidebar.querySelector('h3').textContent, 'Ready for your season.');
+  assert.match(sidebar.textContent, /3 agreed nights/);
+  assert.match(sidebar.textContent, /1 locked night/);
+  assert.match(sidebar.textContent, /110-minute current limit/);
+  assert.doesNotMatch(sidebar.textContent, /Build a programme\./);
+  assert.equal(ui.requests.some(request => request.method === 'POST'), false);
+  await ui.click(`[data-action="availability"][data-id="${original.approved.selection[2]}"]`);
+  const pending = ui.document.querySelector('.decision-sidebar');
+  assert.equal(pending.querySelector('.tiny-label').textContent, 'PREVIOUSLY APPROVED');
+  assert.equal(pending.querySelector('h3').textContent, 'A decision is pending.');
+  assert.equal(ui.document.querySelector('.pending-approval').textContent, 'Pending approval');
+  assert.deepEqual(ui.read().approved, original.approved);
+});
+
+test('pending repair distinguishes the previous approval and recomputes a same-limit support gain', async () => {
+  const data = structuredClone(fixture);
+  const initial = service.programme({ slots: 3, maximumRuntime: 110, current: [], locked: [], excluded: [] });
+  const current = initial.nightOrder;
+  const probe = service.repairOptions({ slots: 3, maximumRuntime: 110, current,
+    locked: current.slice(0, 2), excluded: [current[2]] });
+  const replacementId = probe.result.changes.added[0];
+  const profile = data.profiles[2];
+  const fifth = Object.keys(profile.ranks).find(id => profile.ranks[id] === 5);
+  [profile.ranks[replacementId], profile.ranks[fifth]] = [profile.ranks[fifth], profile.ranks[replacementId]];
+  const local = createProgrammeService(data);
+  const ui = await harness({ handlers: {
+    '/api/bootstrap': () => data,
+    '/api/programme': ({ body }) => local.programme(body),
+    '/api/repair-options': ({ body }) => {
+      const options = local.repairOptions(body);
+      options.result.represented = 0; // The summary must use original evidence, not this claimed count.
+      return options;
+    },
+  } });
+  await ui.click('[data-action="plan"]'); await ui.click('[data-action="approve"]');
+  const approved = ui.read().approved;
+  for (const id of approved.selection.slice(0, 2)) await ui.click(`[data-action="lock"][data-id="${id}"]`);
+  await ui.click(`[data-action="availability"][data-id="${approved.selection[2]}"]`);
+  assert.deepEqual(ui.read().approved, approved);
+  assert.equal(ui.document.querySelector('.decision-sidebar h3').textContent, 'Previously approved');
+  assert.equal(ui.document.querySelector('.pending-approval').textContent, 'Pending approval');
+  const comparison = repairSummaryValues(ui.document.querySelector('.proposal-option'));
+  assert.equal(comparison['Proposed ranking support'], '2/3 → 3/3');
+  assert.equal(comparison['Locked nights kept'], '2');
+  assert.equal(comparison['Runtime limit'], '110 min unchanged');
+  const candidates = ui.document.querySelectorAll('.proposal-option .candidate-evidence tbody tr');
+  const selected = candidates.find(row => row.dataset.candidateStatus === 'selected');
+  const cancelled = candidates.find(row => row.dataset.candidateStatus === 'excluded');
+  const overLimit = candidates.find(row => row.dataset.candidateStatus === 'over_runtime');
+  assert.ok(selected && cancelled && overLimit, 'the visible candidates distinguish proposed, cancelled and over-limit titles');
+  assert.equal(selected.querySelector('.candidate-rank').textContent, '#5', 'the selected film keeps its original rank');
+  assert.equal(selected.querySelector('.candidate-status').textContent, 'Fits brief · proposed');
+  assert.match(selected.querySelector('.candidate-reason').textContent, /Proposed for Night 3/);
+  assert.equal(cancelled.querySelector('.candidate-status').textContent, 'Unavailable');
+  assert.match(cancelled.querySelector('.candidate-reason').textContent, /Marked unavailable/);
+  assert.equal(overLimit.querySelector('.candidate-status').textContent, 'Over limit');
+  assert.match(overLimit.querySelector('.candidate-reason').textContent, /exceeds the 110-minute limit/);
+  assert.equal(ui.read().maximumRuntime, 110);
+  assert.equal(ui.requests.some(request => ['/api/agent', '/api/tastes/search', '/api/tastes/rank'].includes(request.path)), false);
+});
+
+test('runtime alternative comparison stays pending and reports its increased cap until explicit approval', async () => {
+  let statusChecks = 0, repairChecks = 0;
+  const ui = await harness({ handlers: {
+    '/api/programme': ({ body }) => service.programme(body),
+    '/api/repair-options': ({ body }) => { repairChecks++; return service.repairOptions(body); },
+    '/api/agent-status': () => ++statusChecks === 1
+      ? { ...ready, remainingRequests: 0, providerStatus: 'budget_exhausted' } : ready,
+  } });
+  await ui.click('[data-action="plan"]'); await ui.click('[data-action="approve"]');
+  const approved = ui.read().approved;
+  for (const id of approved.selection.slice(0, 2)) await ui.click(`[data-action="lock"][data-id="${id}"]`);
+  await ui.click(`[data-action="availability"][data-id="${approved.selection[2]}"]`);
+  const current = repairSummaryValues(ui.document.querySelector('.proposal-option'));
+  const alternative = repairSummaryValues(ui.document.querySelector('.proposal-option.alt'));
+  assert.equal(current['Proposed ranking support'], '2/3 → 2/3');
+  assert.equal(current['Runtime limit'], '110 min unchanged');
+  assert.equal(alternative['Proposed ranking support'], '2/3 → 3/3');
+  assert.equal(alternative['Locked nights kept'], '2');
+  assert.equal(alternative['Runtime limit'], '110 → 117 min proposed');
+  assert.equal(ui.read().maximumRuntime, 110);
+  assert.deepEqual(ui.read().approved, approved);
+  const proposal = ui.read().proposal;
+  for (const id of ['replacement-current', 'replacement-runtime']) {
+    const detail = ui.document.getElementById(id);
+    assert.ok(detail, 'each pending option exposes its decision evidence');
+    detail.open = true;
+  }
+  await ui.click('[data-action="agent-status"]');
+  assert.deepEqual(ui.read().proposal, proposal, 'the read-only status response keeps the pending proposal');
+  for (const id of ['replacement-current', 'replacement-runtime']) {
+    assert.equal(ui.document.getElementById(id).open, true, `${id} stays open through an unrelated status response`);
+  }
+  assert.equal(repairChecks, 1, 'checking availability does not request another repair');
+  await ui.click('[data-action="plan"]');
+  assert.equal(repairChecks, 2, 'explicit manual review obtains a new pending proposal');
+  for (const id of ['replacement-current', 'replacement-runtime']) {
+    assert.equal(ui.document.getElementById(id).open, false, `${id} starts closed for the new proposal`);
+  }
+  assert.equal(statusChecks, 2);
+  assert.deepEqual(ui.read().approved, approved, 'a fresh proposal still requires approval');
+  await ui.click('[data-action="approve"][data-kind="runtime"]');
+  assert.equal(ui.read().maximumRuntime, 117);
+  assert.equal(ui.read().proposal, null);
+  assert.equal(ui.document.querySelector('.pending-approval'), null);
+  assert.equal(ui.document.querySelector('.decision-sidebar h3').textContent, 'Replacement approved');
+  assert.deepEqual(ui.read().approved.selection.slice(0, 2), approved.selection.slice(0, 2));
+  assert.equal(ui.requests.some(request => ['/api/agent', '/api/tastes/search', '/api/tastes/rank'].includes(request.path)), false);
+});
+
+test('invented fixture repair comparisons cannot label their support as genuine ranking evidence', async () => {
+  const data = JSON.parse(fixtureText);
+  const local = createProgrammeService(data);
+  const ui = await harness({ handlers: {
+    '/api/bootstrap': () => data,
+    '/api/programme': ({ body }) => local.programme(body),
+    '/api/repair-options': ({ body }) => local.repairOptions(body),
+  } });
+  await ui.click('[data-action="plan"]'); await ui.click('[data-action="approve"]');
+  const approved = ui.read().approved;
+  for (const id of approved.selection.slice(0, 2)) await ui.click(`[data-action="lock"][data-id="${id}"]`);
+  await ui.click(`[data-action="availability"][data-id="${approved.selection[2]}"]`);
+  const values = repairSummaryValues(ui.document.querySelector('.proposal-option'));
+  assert.ok(Object.hasOwn(values, 'Proposed fixture support'));
+  assert.equal(Object.hasOwn(values, 'Proposed ranking support'), false);
+  assert.equal(ui.document.querySelector('[data-action="compose-agent"]'), null);
+  assert.equal(ui.requests.some(request => ['/api/agent', '/api/tastes/search', '/api/tastes/rank'].includes(request.path)), false);
+});
+
+test('nested notes and Luna disclosures stay open with note focus and value through an unrelated status response', async t => {
+  let checks = 0, release, markStarted;
+  const held = new Promise(resolve => { release = resolve; });
+  const started = new Promise(resolve => { markStarted = resolve; });
+  t.after(() => release());
+  const ui = await harness({ handlers: {
+    '/api/programme': ({ body }) => service.programme(body),
+    '/api/agent-status': async () => {
+      if (++checks === 1) return { ...ready, remainingRequests: 0, providerStatus: 'budget_exhausted' };
+      markStarted(); await held; return ready;
+    },
+  } });
+  await ui.click('[data-action="plan"]'); await ui.click('[data-action="approve"]');
+  const approved = ui.read().approved;
+  await ui.click('[data-action="compose-agent"]');
+  // Native details open state is represented by its actual DOM attribute.
+  for (const id of ['brief-notes', 'luna-suggestions', 'luna-details']) ui.document.getElementById(id).open = true;
+  ui.document.querySelector('#organiser-note').focus();
+  await ui.input('#organiser-note', 'Initial discussion note.');
+  const refreshing = ui.click('[data-action="agent-status"]');
+  await started;
+  assert.equal(ui.read().agentStatusBusy, true);
+  for (const id of ['programme-tools', 'brief-notes', 'luna-suggestions', 'luna-details']) {
+    assert.equal(ui.document.getElementById(id).open, true, `${id} stays open when availability checking starts`);
+  }
+  const note = ui.document.querySelector('#organiser-note');
+  note.focus(); note.setSelectionRange(8, 8);
+  await ui.input('#organiser-note', 'Updated note while availability is being checked.');
+  release(); await refreshing;
+  assert.equal(ui.read().agentStatusBusy, false);
+  assert.deepEqual(ui.read().approved, approved);
+  for (const id of ['programme-tools', 'brief-notes', 'luna-suggestions', 'luna-details']) {
+    assert.equal(ui.document.getElementById(id).open, true, `${id} stays open when the status response rerenders`);
+  }
+  const restoredNote = ui.document.querySelector('#organiser-note');
+  assert.equal(ui.document.activeElement, restoredNote);
+  assert.equal(restoredNote.selectionStart, 8);
+  assert.equal(restoredNote.value, 'Updated note while availability is being checked.');
+  assert.equal(ui.read().organiserNote, restoredNote.value);
+  assert.equal(restoredNote.closest('#brief-notes').open, true, 'focused input is inside an open notes disclosure');
+  assert.equal(restoredNote.closest('#programme-tools').open, true, 'focused input is inside the open tools disclosure');
+  assert.equal(checks, 2);
+  assert.equal(ui.requests.some(request => ['/api/agent', '/api/tastes/search', '/api/tastes/rank'].includes(request.path)), false);
 });

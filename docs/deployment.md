@@ -1,6 +1,6 @@
 # ReelBalance deployment and publication
 
-Updated on 12 October 2026. Use the demo and optional 1:33 video URLs in the Devpost submission; this public guide omits those links. Public source is available at [atikur/reelbalance](https://github.com/atikur/reelbalance), with genuine runtime evidence provisioned privately. The current `reelbalance:public-access-ui-20261012` image is deployed and was healthy at verification. Its full anonymous public workflow and optional reserved judge access passed live checks on 12 October. The earlier judge-access checks, initial guest verification on 10 October and fresh Qloo rankings on 11 October remain dated historical evidence. Submission has not been confirmed.
+Updated on 13 October 2026. Use the demo and optional 1:33 video URLs in the Devpost submission; this public guide omits those links. Public source is available at [atikur/reelbalance](https://github.com/atikur/reelbalance), with genuine runtime evidence provisioned privately. The current `reelbalance:visual-polish-final-20261013` image is deployed and was healthy at verification after 199 offline Linux tests. The visual-polish checks below reused existing genuine evidence. Its full anonymous public workflow and optional reserved judge access passed live checks on 12 October. The earlier judge-access checks, initial guest verification on 10 October and fresh Qloo rankings on 11 October remain dated historical evidence. Submission has not been confirmed.
 
 ## Verified full public deployment
 
@@ -16,7 +16,7 @@ A separate optional judge explanation completed with two reserved OpenAI attempt
 
 | Setting | Deployed configuration verified on 12 October |
 | --- | --- |
-| Current image | `reelbalance:public-access-ui-20261012`; healthy at deployment and live-workflow verification |
+| Image at the 12 October live check | `reelbalance:public-access-ui-20261012`; healthy at deployment and live-workflow verification |
 | Earlier base image | `reelbalance:public-access-20261012`; backend and state-preservation checks passed before UI amendment |
 | Resource limits | 512 MiB memory and combined memory/swap; 0.5 CPU |
 | Public Luna | 180 OpenAI attempts per UTC day; 24 interactions per browser session per UTC day |
@@ -265,3 +265,14 @@ On 13 October 2026, all 179 portable tests passed locally and in Node.js 22 Linu
 The public and reserved provider pools, browser caps, global operation guard and 60-second Qloo spacing are unchanged. A saved browser checkpoint is revalidated against the current catalogue and private cached evidence; it cannot restore credentials, quotas, provider operations, assistant responses or an unapproved proposal. An unresolved cancellation remains unresolved after reload. Safe retry blocks editing while checking evidence and rejects a snapshot changed by another tab.
 
 Rollback to the reviewed preceding `reelbalance:programme-review-final-20261013` image preserves the same private ledger and cache formats. Retain current consumed counters and evidence during rollback; do not restore an older state backup. The release backup was made after a graceful drain and before switching the image. Other shared containers were retained.
+
+
+## Visual polish release — 13 October 2026
+
+The healthy `reelbalance:visual-polish-final-20261013` image passed all 199 portable tests locally and in Node.js 22 Linux at 512 MiB combined memory/swap and 0.5 CPU. The clean-copy rehearsal passed with 61 allowlisted files and external requests blocked. Deployment preserved patched dependencies, credentials, provider counters, private evidence, resource limits and the other shared containers.
+
+The first planning action is visible at the tested 1280×720 laptop and 390×844 phone sizes. Existing programmes appear before editing controls. Previous approval and pending proposals are labelled separately; repair summaries recompute usable original-rank support, inherited locked night positions and each option’s runtime limit. Candidate evidence highlights the proposed film, preserves original ranks and stacks into phone cards without horizontal scrolling. The export has a clear approved-order/runtime summary, all original ranks or unknown states, explicit source discrepancies and screening caveats.
+
+Hosted checks reused the genuine Radiohead, Bill Evans and Anoushka Shankar evidence collected on 11 October. The manual repair changed usable support from 2/3 to 3/3 through Short Term 12’s original rank five, kept Nights 1 and 3 and retained the 110-minute cap. Explicit approval and the actual HTML download matched the canonical renderer. Keyboard checks covered the composer, retained note-editor focus and dialog exit. Six hosted browser assets matched reviewed source hashes. These verification steps made no new provider requests; the earlier live-provider checks remain dated separately.
+
+The preceding reviewed `reelbalance:visual-polish-20261013` image is available for image-only rollback. Keep current usage ledgers and cached evidence; never restore older counters from a state backup.

@@ -127,7 +127,7 @@ export async function rehearsePublicPackage({ sourceDirectory = ROOT } = {}) {
     const sheetResponse = await request('/api/programme-sheet?payload=' + encodeURIComponent(JSON.stringify(payload)));
     assert.equal(sheetResponse.status, 200);
     const sheet = await sheetResponse.text();
-    assert.match(sheet, /synthetic|invented/i); assert.match(sheet, /117 minutes/);
+    assert.match(sheet, /synthetic|invented/i); assert.match(sheet, /Up to 117 min per film/);
     for (const [path, body] of [['/api/agent', { message: 'Explain the synthetic programme.', context: stateApi.planningRequest(state) }],
       ['/api/tastes/search', { query: 'Fictional ensemble', live: true }]]) {
       const blocked = await request(path, body); assert.equal(blocked.status, 503); assert.equal((await blocked.json()).code, 'synthetic_mode');

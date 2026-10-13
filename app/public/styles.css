@@ -400,6 +400,156 @@ h1,h2,h3{scroll-margin-top:28px}
 
 .brief-notes{font-size:11px;margin-top:16px;color:var(--copy)}.brief-notes summary{cursor:pointer;line-height:1.7}.brief-notes .form-label{display:block;margin:12px 0 6px}.brief-notes textarea{width:100%;resize:vertical}
 
-.replacement-reasons table{min-width:360px}
+.replacement-reasons table{min-width:0}
 .proposal-option,.replacement-reasons{min-width:0}.replacement-reasons .table-wrap{max-width:100%;min-width:0}
 .proposal-options:has(.replacement-reasons[open]){grid-template-columns:minmax(0,1fr)}
+
+
+/* Put the current decision first, with the editing tools close at hand. */
+.topbar-context{display:flex;align-items:center;flex-wrap:wrap;gap:0 8px}
+.topbar-context .topbar-divider{margin:0 6px}
+.save-status{font-size:11px;letter-spacing:0;color:var(--copy-soft);padding-left:12px;margin-left:5px;border-left:1px solid var(--line)}
+.save-status.needs-attention{color:#8b492d;font-weight:600}
+.page-heading{margin-bottom:20px}
+.page-heading .subtitle{margin-top:9px;line-height:1.6}
+.start-guide{padding:12px 16px;margin-bottom:20px;gap:5px 14px}
+.start-guide span{min-width:200px}
+.planning-setup{grid-template-columns:minmax(0,1.22fr) minmax(280px,.78fr)}
+.initial-setup .agent-panel,.initial-setup .brief-panel{padding:21px 23px}
+.initial-setup .brief-panel h2{margin-bottom:15px}
+.initial-setup .brief-divider{margin:17px 0 13px}
+.initial-setup .brief-panel .button{margin-top:14px}
+.initial-setup .brief-panel .brief-hint{margin-top:10px}
+.agent-message{min-height:76px;resize:vertical}
+.agent-intro{margin-top:10px;line-height:1.65}
+.agent-panel .form-label{margin-top:13px}
+.prompt-suggestions{margin-top:10px;font-size:12px;color:var(--copy)}
+.prompt-suggestions>summary{padding:3px 0;color:#405b34}
+.prompt-suggestions[open] .agent-examples{margin:8px 0}
+.agent-send-row{margin-top:13px}
+.initial-setup .agent-footer{margin-top:13px;padding-top:12px}
+.initial-setup .response-details{margin-top:10px;padding-top:9px}
+.compact-profiles{margin-bottom:8px;gap:10px}
+.compact-profiles .profile-card{align-items:center;padding:11px 14px;gap:10px}
+.compact-profiles .profile-art{width:30px;height:30px}
+.compact-profiles .profile-art:before{top:13px;left:13px}
+.compact-profiles .profile-art:after{width:20px;height:20px}
+.compact-profiles .profile-card small{font-size:9px;letter-spacing:1px}
+.compact-profiles .profile-card strong{font-size:14px;margin-top:1px}
+.compact-profiles .reference-label{display:none}
+.evidence-link{margin-bottom:17px;font-size:11px}
+.programme-toolbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:-5px 0 21px}
+.programme-tools{border:1px solid var(--line);border-radius:10px;background:#f2f4eb;margin:23px 0}
+.programme-tools>summary{padding:17px 21px;color:var(--green);font-size:14px;font-weight:600}
+.programme-tools>summary span{font-size:12px;font-weight:400;color:var(--copy);margin-left:16px}
+.programme-tools[open]>summary{border-bottom:1px solid var(--line)}
+.programme-tools .planning-setup{padding:20px;margin:0;gap:20px}
+.programme-tools .agent-panel,.programme-tools .brief-panel{padding:22px}
+.previous-approval{background:#f5f5ef;border-color:#e0e2d6}
+.previous-approval h3{font-size:21px;color:#526449}
+.previous-approval .receipt-pending-note{font-size:12px;margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}
+.proposal-labels{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.pending-approval{background:#e7dfc2;color:#5e542c;border:1px solid #d4c696}
+.repair-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 17px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.repair-summary div{min-width:0}
+.repair-summary dt{font-size:11px;line-height:1.5;color:var(--copy);margin-bottom:5px}
+.repair-summary dd{margin:0;font-size:14px;line-height:1.55;font-weight:600;color:var(--green);font-variant-numeric:tabular-nums}
+.proposal-options:not(.single) .repair-summary{grid-template-columns:1fr;gap:8px}
+.proposal-options:not(.single) .repair-summary div{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.replacement-reasons{padding:17px 18px}
+.replacement-reasons[open]>summary{margin-bottom:12px}
+.replacement-reasons p{font-size:13px;line-height:1.75;margin:8px 0}
+.replacement-reasons h4{font-size:14px;color:var(--green);margin:18px 0 8px}
+.replacement-reasons .candidate-evidence{font-size:13px;line-height:1.6;table-layout:fixed}
+.candidate-evidence th:nth-child(1){width:13%}
+.candidate-evidence th:nth-child(2){width:24%}
+.candidate-evidence th:nth-child(3){width:17%}
+.replacement-reasons .candidate-evidence th{font-size:11px;color:var(--copy);padding:11px 10px}
+.replacement-reasons .candidate-evidence td{padding:13px 10px;overflow-wrap:anywhere}
+.candidate-selected{background:#eaf1e3}
+.candidate-selected td:first-child{box-shadow:inset 3px 0 var(--green)}
+.candidate-rank{font-weight:600;color:var(--green)}
+.candidate-status{display:inline-block;font-size:11px;line-height:1.5;font-weight:600;padding:3px 7px;border-radius:4px;background:#f0eee4;color:#6a6143;margin-bottom:5px}
+.candidate-selected .candidate-status,.candidate-eligible .candidate-status,.candidate-retained .candidate-status{background:#dfead5;color:#395b2f}
+.candidate-excluded .candidate-status{background:#f5e6da;color:#8b492d}
+.candidate-reason{display:block;color:var(--copy);font-size:12px;line-height:1.7}
+#sheet-preview .sheet-head{padding:10px 0 22px}
+#sheet-preview .sheet-head h1{font-size:34px;margin:10px 0 16px;overflow-wrap:anywhere}
+.sheet-summary{display:flex;flex-wrap:wrap;gap:7px 9px;list-style:none;padding:0;margin:0}
+.sheet-summary-item{padding:5px 10px;border:1px solid #d6ddcb;border-radius:5px;background:#f2f5ed;font-size:12px;color:#3d5834}
+.sheet-summary-item:first-child{background:var(--green);border-color:var(--green);color:var(--white);font-weight:600}
+#sheet-preview .sheet-entry{padding:20px 0}
+.sheet-entry-head h3{font:27px/1.3 Georgia,serif;letter-spacing:-.4px;margin:5px 0 8px;overflow-wrap:anywhere}
+.sheet-entry-head small{font-weight:600;letter-spacing:1.4px}
+#sheet-preview .sheet-film-meta{font-size:13px;color:var(--copy)}
+.sheet-ranks{margin:13px 0}
+.sheet-ranks-label{font-size:11px;color:var(--copy);font-weight:600;margin-bottom:7px}
+.sheet-rank-list{list-style:none;padding:0;margin:0;display:grid;gap:4px}
+.sheet-rank-list li{display:grid;grid-template-columns:minmax(0,1fr) 48px 125px;gap:10px;align-items:baseline;font-size:13px;color:var(--copy)}
+.sheet-rank-list li>span{overflow-wrap:anywhere}
+.sheet-rank-list strong{font-weight:600;text-align:right;color:var(--green)}
+.sheet-rank-list small{font-size:11px;letter-spacing:0;color:var(--copy)}
+#sheet-preview .sheet-source-note,.sheet-source-link{font-size:12px;color:var(--copy);line-height:1.7;overflow-wrap:anywhere}
+.sheet-note,.sheet-policy{overflow-wrap:anywhere}
+.sheet-policy p{margin:0 0 12px}
+.sheet-approval{font-size:11px}
+@media(max-width:1000px){
+  .planning-setup{grid-template-columns:1fr}
+  .initial-setup .brief-panel .button{width:auto}
+}
+@media(max-width:680px){
+  main{padding-top:21px}
+  .topbar-context{font-size:8px;gap:0 5px}
+  .topbar-context .topbar-divider{margin:0 3px}
+  .save-status{font-size:10px;padding-left:9px;margin-left:3px}
+  .page-heading{margin-bottom:16px;gap:12px}
+  .page-heading h1{font-size:32px}
+  .page-heading .eyebrow{margin-bottom:7px}
+  .page-heading .subtitle{font-size:13px;line-height:1.65}
+  .start-guide{padding:11px 13px;gap:3px;font-size:12px;margin-bottom:17px}
+  .start-guide span{flex-basis:100%;min-width:0}
+  .initial-setup .agent-panel,.initial-setup .brief-panel{padding:18px 17px}
+  .agent-intro{font-size:13px}
+  .agent-heading h2{font-size:25px}
+  .agent-status{margin-top:9px}
+  .agent-message{min-height:70px}
+  .agent-send-row{margin-top:11px}
+  .initial-setup .brief-panel .button{width:100%}
+  .compact-profiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .compact-profiles .profile-card{padding:10px 9px;align-items:flex-start;gap:0}
+  .compact-profiles .profile-art,.compact-profiles .profile-code{display:none}
+  .compact-profiles .profile-card small{font-size:9px;letter-spacing:.4px}
+  .compact-profiles .profile-card strong{font-size:12px;line-height:1.5;margin-top:3px}
+  .evidence-link{gap:2px 10px;margin-bottom:15px}
+  .evidence-link .text-button{font-size:11px;min-height:32px}
+  .programme-toolbar{margin:0 0 17px;gap:6px 12px}
+  .programme-tools>summary{padding:15px 17px;font-size:14px}
+  .programme-tools>summary span{display:block;font-size:12px;margin:5px 0 0 16px}
+  .programme-tools .planning-setup{padding:12px;gap:14px}
+  .programme-tools .agent-panel,.programme-tools .brief-panel{padding:18px 15px}
+  .proposal-top{flex-wrap:wrap}
+  .repair-summary{grid-template-columns:1fr;gap:9px}
+  .repair-summary div{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .repair-summary dt{margin:0;font-size:11px}
+  .repair-summary dd{font-size:13px;text-align:right}
+  .replacement-reasons{padding:14px 12px}
+  .replacement-reasons .table-wrap{overflow:visible}
+  .replacement-reasons .candidate-evidence{display:block;font-size:13px}
+  .candidate-evidence thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  .candidate-evidence tbody{display:grid;gap:10px}
+  .candidate-evidence tr{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;padding:11px 12px;gap:8px 12px}
+  .replacement-reasons .candidate-evidence td{display:block;padding:0;border:0}
+  .candidate-evidence td:before{content:attr(data-label);display:block;color:var(--copy);font-size:10px;margin-bottom:3px}
+  .candidate-evidence td:nth-child(1){grid-column:1;grid-row:1}
+  .candidate-evidence td:nth-child(2){grid-column:1/-1;grid-row:2}
+  .candidate-evidence td:nth-child(3){grid-column:2;grid-row:1}
+  .candidate-evidence td:nth-child(4){grid-column:1/-1;grid-row:3}
+  .candidate-selected{border-color:#adc39c!important}
+  .candidate-selected td:first-child{box-shadow:none}
+  .candidate-status{font-size:11px}
+  .candidate-reason{font-size:12px}
+  #sheet-preview .sheet-head h1{font-size:30px}
+  .sheet-summary-item{font-size:11px}
+  .sheet-rank-list li{grid-template-columns:minmax(0,1fr) 48px;gap:0 10px}
+  .sheet-rank-list small{grid-column:1/-1}
+}

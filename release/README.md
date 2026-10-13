@@ -14,10 +14,10 @@ This repository contains the complete application and invented setup fixtures. G
 
 - Builds and repairs a programme within a runtime limit, preserving locked films in their approved night positions.
 - Shows original top-five support, unknown ranks and support shortfalls. A separate runtime increase needs its own approval.
-- Explains **Why this replacement?** using the removed title, preserved choices and original ranking evidence, including why higher-ranked candidates may be unavailable or too long.
+- Shows a pending repair summary with usable support before and after, locked nights kept and any proposed runtime change. **Why this replacement?** highlights the chosen candidate and shows why higher-ranked titles may be unavailable or too long; candidate evidence stacks into readable cards on phones.
 - Saves the brief, approved order, locks, exclusions and prepared artist-collection checkpoint in this browser when storage is available. Reload revalidates the current catalogue and cached evidence; pending proposals, assistant replies and authentication are not restored.
-- Offers a ready example, explicit custom-artist collection, useful waiting and error states, keyboard focus handling and polite operation-status announcements.
-- Exports an approved HTML programme sheet with night order, original ranks, runtime notes and source caveats.
+- Offers a compact ready example and a clear first planning action. Draft and approved programmes appear before editing controls, with task-aware Luna prompts, separate previous-approval and pending-proposal labels, useful waiting states and keyboard focus handling.
+- Exports an approved HTML programme sheet with a clear order/runtime summary, every reference’s original rank or unknown state, explicit runtime discrepancies and source caveats.
 
 The pool was curated from the original example references' Qloo film suggestions and checked for film identity and runtime. Custom artists rerank that same pool; they do not discover a new catalogue. The three references are declared interests, not member votes or measured audience segments. Top-five support is a planning policy, not an enjoyment probability. Adoption, time savings and attendance have not been measured. Screening availability, rights and exact film-copy runtimes still need organiser confirmation.
 
@@ -42,7 +42,7 @@ The rehearsal uses a clean copy of the public allowlist and checks the synthetic
 
 ## Verification and limits
 
-On 13 October 2026, all 179 portable tests passed locally and in Node.js 22 Linux under 512 MiB combined memory/swap and 0.5 CPU. The clean-copy rehearsal verified 61 public source and fixture files with external requests blocked. The healthy `reelbalance:programme-review-ux-20261013` deployment retained patched dependencies, private evidence, provider counters, credentials and existing allowances. Hosted desktop, 390×844 mobile and keyboard checks verified saving, safe reload, prepared custom-evidence recovery, replacement explanations, explicit approval and the programme sheet. The actual HTML download matched the canonical renderer. These release checks reused genuine completed Qloo evidence and made no new provider calls.
+On 13 October 2026, all 199 portable tests passed locally and in Node.js 22 Linux under 512 MiB combined memory/swap and 0.5 CPU. The clean-copy rehearsal verified 61 public source and fixture files with external requests blocked. The healthy `reelbalance:visual-polish-final-20261013` deployment retained patched dependencies, private evidence, provider counters, credentials and existing allowances. Hosted desktop, 390×844 mobile and keyboard checks verified saving, safe reload, prepared custom-evidence recovery, replacement explanations, explicit approval and the programme sheet. The actual HTML download matched the canonical renderer. These release checks reused genuine completed Qloo evidence and made no new provider calls.
 
 The [controlled decision audit](docs/decision-audit.md) compares three deterministic policies on the same frozen rankings and constraints, with an exhaustive independent enumerator. Deliberately deleted ranks are reported separately as synthetic faults. The audit checks decision rules; it is not user testing, a generic-LLM comparison or proof that audiences prefer the films.
 

@@ -2,7 +2,7 @@
 
 Use the demo and unchanged 1:33 video linked in the Devpost submission. The public source is [atikur/reelbalance](https://github.com/atikur/reelbalance), licensed under MIT. Every feature is public; optional judge sign-in adds reserved allowance.
 
-Updated on 13 October 2026. The healthy `reelbalance:programme-review-ux-20261013` release passed 179 local and offline Linux tests at 512 MiB and 0.5 CPU, a 61-file clean-copy rehearsal, and hosted desktop, mobile, keyboard, cached custom-evidence restoration, repair and export checks. The actual HTML download matched the canonical renderer. These checks used genuine existing evidence without new provider calls. The full anonymous live workflow and judge reserve also passed live checks on 12 October. Submission has not been confirmed.
+Updated on 13 October 2026. The healthy `reelbalance:visual-polish-final-20261013` release passed 199 local and offline Linux tests at 512 MiB and 0.5 CPU, a 61-file clean-copy rehearsal, and hosted desktop, mobile, keyboard, cached custom-evidence restoration, repair and export checks. The actual HTML download matched the canonical renderer. These checks used genuine existing evidence without new provider calls. The full anonymous live workflow and judge reserve also passed live checks on 12 October. Submission has not been confirmed.
 
 ## The published repair
 
@@ -17,7 +17,7 @@ This is real hosted-app footage from 11 October: three fresh Qloo movie rankings
 1. Open the demo from Devpost in a fresh browser. Start with the supplied music references, three nights and the displayed per-film cap. The example's completed Qloo evidence is genuine; its exact choices may differ from the video.
 2. Choose **Plan with Luna** for a live proposal, or **Build draft manually** for deterministic planning. Inspect the proposed night order, original ranks and any support shortfall. Approve the programme.
 3. Lock two nights, then mark the remaining film unavailable. The approved choices stay in place while a repair is pending.
-4. Inspect **Why this replacement?**: removed and added films, kept nights, lost/restored support and higher-ranked candidates that are excluded or over the cap. The explanation is calculated from the same original ranks, without another provider request.
+4. Inspect the **Pending approval** summary for support before/after, locked nights and the proposed limit. The previous receipt remains **Previously approved**. Open **Why this replacement?**: removed and added films, kept nights, lost/restored support and higher-ranked candidates that are excluded or over the cap. The explanation is calculated from the same original ranks, without another provider request.
 5. Choose **Repair with Luna** or **Review programme manually** if another review is needed. Compare the current-limit option with any separate runtime alternative. Neither the limit nor the selection changes until its approval button is used.
 6. Approve one option, inspect its receipt and choose **Preview programme sheet → Download HTML sheet**. Confirm night order, original ranks, runtime notes and source caveats.
 
@@ -25,7 +25,7 @@ For a live repair, send once: “Repair the cancelled night. Preserve my locked 
 
 ## Check browser recovery
 
-After approval, set locks or mark a film unavailable, wait for **Programme saved in this browser**, then reload. The brief, approved order, locks, exclusions, name and note are saved when browser storage is available. An unresolved cancellation remains **Needs a review**; a pending proposal or assistant answer is not restored and no paid request is replayed.
+After approval, set locks or mark a film unavailable, wait for **Saved here**, then reload. The brief, approved order, locks, exclusions, name and note are saved when browser storage is available. An unresolved cancellation remains **Needs a review**; a pending proposal or assistant answer is not restored and no paid request is replayed.
 
 Reload verifies the current catalogue and, for custom references, reads the completed evidence from the server cache. It cannot substitute stale or unverified rankings. If verification fails, the saved version is retained with **Retry saved workspace** and **Start fresh** actions. A prepared artist collection can also resume from its server-held progress without automatically collecting another ranking.
 

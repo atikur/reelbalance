@@ -95,3 +95,49 @@ export function explainReplacement(data, request, proposal) {
     policy: 'Support means a selected film is in a reference’s original top five within this shortlist. It is not an enjoyment prediction; missing ranks remain unknown.',
   };
 }
+
+// A pending comparison, not an approval receipt. Usable original-rank support
+// and inherited locked positions are recomputed instead of trusting coverage.
+export function summarizeRepair(data, currentRequest, proposedRequest, result) {
+  if (!Array.isArray(data?.films) || !data.films.length || !Array.isArray(data.profiles) || !data.profiles.length ||
+      !['known_coverage_met', 'coverage_shortfall', 'coverage_not_certified'].includes(result?.status)) return null;
+  if (data.films.some(film => !film || typeof film.id !== 'string' || !film.id ||
+      !Number.isFinite(film.runtime) || film.runtime <= 0 || typeof film.eligible !== 'boolean')) return null;
+  const films = new Map(data.films.map(film => [film.id, film]));
+  if (films.size !== data.films.length ||
+      data.profiles.some(profile => !profile || typeof profile.id !== 'string' || !profile.id || !profile.ranks ||
+        typeof profile.ranks !== 'object' || Array.isArray(profile.ranks) || Object.entries(profile.ranks)
+          .some(([id, rank]) => !films.has(id) || !Number.isInteger(rank) || rank < 1)) ||
+      new Set(data.profiles.map(profile => profile.id)).size !== data.profiles.length) return null;
+  const validRequest = request => request && [2, 3].includes(request.slots) &&
+    Number.isInteger(request.maximumRuntime) && request.maximumRuntime >= 1 && request.maximumRuntime <= 240 &&
+    ['current', 'locked', 'excluded'].every(key => uniqueIds(request[key]) && request[key].every(id => films.has(id))) &&
+    [2, 3].includes(request.current.length) && request.locked.every(id => request.current.includes(id));
+  if (!validRequest(currentRequest) || !validRequest(proposedRequest) ||
+      currentRequest.current.length !== proposedRequest.current.length ||
+      currentRequest.current.some((id, index) => proposedRequest.current[index] !== id) ||
+      currentRequest.locked.some(id => !proposedRequest.locked.includes(id)) ||
+      !uniqueIds(result.selection) || result.selection.length !== proposedRequest.slots ||
+      !uniqueIds(result.nightOrder) || result.nightOrder.length !== proposedRequest.slots ||
+      result.nightOrder.some(id => !result.selection.includes(id))) return null;
+  const usable = (id, request) => {
+    const film = films.get(id);
+    return film?.eligible === true && film.runtime <= request.maximumRuntime && !request.excluded.includes(id);
+  };
+  if (result.selection.some(id => !films.has(id) || !usable(id, proposedRequest)) ||
+      proposedRequest.locked.some(id => !result.selection.includes(id) ||
+        result.nightOrder.indexOf(id) !== currentRequest.current.indexOf(id))) return null;
+  const supportCount = (ids, request) => data.profiles.filter(profile => ids.some(id => usable(id, request) &&
+    Object.hasOwn(profile.ranks, id) && Number.isInteger(profile.ranks[id]) &&
+    profile.ranks[id] > 0 && profile.ranks[id] <= TOP_K)).length;
+  return {
+    beforeSupport: supportCount(currentRequest.current, currentRequest),
+    afterSupport: supportCount(result.selection, proposedRequest),
+    referenceCount: data.profiles.length,
+    keptLockedNightCount: currentRequest.locked.length,
+    currentLimit: currentRequest.maximumRuntime,
+    proposedLimit: proposedRequest.maximumRuntime,
+    limitUnchanged: currentRequest.maximumRuntime === proposedRequest.maximumRuntime,
+    nextState: 'proposed',
+  };
+}
