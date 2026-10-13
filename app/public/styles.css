@@ -391,3 +391,15 @@ h1,h2,h3{scroll-margin-top:28px}
   .topbar-actions{gap:7px 12px}
   .judge-entry{min-height:40px;padding:9px 14px;font-size:12px}
 }
+
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.start-guide{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:15px 18px;margin-bottom:18px;border:1px solid #d6dfcd;border-radius:8px;background:#f2f5ed;font-size:12px;line-height:1.7}.start-guide strong{color:var(--ink)}.start-guide span{flex:1;min-width:180px;color:var(--copy)}
+.taste-time{font-size:12px;line-height:1.8;margin:10px 0 16px;color:var(--copy)}
+.workspace-save{font-size:11px;color:var(--copy);padding:0 0 14px;line-height:1.7}.workspace-save.warning{border:1px solid #dcc5a7;background:#fcf5eb;border-radius:8px;padding:12px 16px;margin-bottom:16px}.workspace-save .text-button{margin-left:12px}
+.replacement-reasons{margin:16px 0;padding:14px 16px;border:1px solid #d7decf;border-radius:8px;background:#fffefa}.replacement-reasons summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}.replacement-reasons p,.replacement-reasons li{font-size:12px;line-height:1.8;color:var(--copy)}.replacement-reasons h4{font-size:13px;margin:14px 0 6px}.replacement-reasons ul{padding-left:18px}.replacement-reasons table{font-size:11px;width:100%;border-collapse:collapse;margin-top:10px}.replacement-reasons th,.replacement-reasons td{text-align:left;padding:8px 7px;border-bottom:1px solid var(--line);vertical-align:top}.replacement-reasons th{font-weight:600}.replacement-reasons .table-wrap{overflow:auto}
+
+.brief-notes{font-size:11px;margin-top:16px;color:var(--copy)}.brief-notes summary{cursor:pointer;line-height:1.7}.brief-notes .form-label{display:block;margin:12px 0 6px}.brief-notes textarea{width:100%;resize:vertical}
+
+.replacement-reasons table{min-width:360px}
+.proposal-option,.replacement-reasons{min-width:0}.replacement-reasons .table-wrap{max-width:100%;min-width:0}
+.proposal-options:has(.replacement-reasons[open]){grid-template-columns:minmax(0,1fr)}

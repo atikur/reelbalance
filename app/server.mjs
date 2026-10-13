@@ -18,6 +18,8 @@ const STATIC_FILES = new Map([
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/state.js', ['state.js', 'text/javascript; charset=utf-8']],
+  ['/persistence.js', ['persistence.js', 'text/javascript; charset=utf-8']],
+  ['/replacement.js', ['replacement.js', 'text/javascript; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
 ]);
 

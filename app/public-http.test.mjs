@@ -53,6 +53,18 @@ async function serve(t, options = {}) {
 
 const fakeAgent = (calls = []) => ({ status: () => ({ model: 'mock', configured: true }), run: async body => { calls.push(body); return { answer: 'Injected mock, never a provider response.', llmRequests: 0, qlooRequests: 0 }; } });
 
+test('public boot serves both browser helpers with the current source and no provider operation',async t=>{
+  const calls=[];const {port}=await serve(t,{agentService:fakeAgent(calls)});
+  for(const name of ['persistence.js','replacement.js']) {
+    const response=await request(port,'/'+name);
+    assert.equal(response.status,200);
+    assert.match(response.headers['content-type'],/^text\/javascript/);
+    assert.equal(response.text,await readFile(new URL('./public/'+name,import.meta.url),'utf8'));
+    assert.equal(response.headers['cache-control'],'no-store');
+  }
+  assert.equal(calls.length,0);
+});
+
 test('public startup requires exact HTTPS origin and owner token for live Qloo', async () => {
   await assert.rejects(createServer({ dataset: fixture, accessMode: 'public' }), /HTTPS/);
   await assert.rejects(createServer({ dataset: fixture, accessMode: 'public', appOrigin: 'http://127.0.0.1' }), /HTTPS/);

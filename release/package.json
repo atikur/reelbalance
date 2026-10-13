@@ -4,9 +4,14 @@
   "private": true,
   "description": "ReelBalance source with invented fixtures and private evidence provisioning",
   "license": "MIT",
-  "author": { "name": "Atikur Rahman", "url": "https://github.com/atikur" },
+  "author": {
+    "name": "Atikur Rahman",
+    "url": "https://github.com/atikur"
+  },
   "type": "module",
-  "engines": { "node": ">=22.19.0" },
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env.local scripts/public-start.mjs",
     "dev": "node --env-file-if-exists=.env.local scripts/public-start.mjs",
@@ -18,7 +23,10 @@
     "operator:status": "node --env-file-if-exists=.env.local scripts/provider-admin.mjs status",
     "operator:recover": "node --env-file-if-exists=.env.local scripts/provider-admin.mjs recover-openai",
     "assistant:check": "node --env-file-if-exists=.env.local scripts/check-assistant.mjs",
-    "docker:verify": "node scripts/docker-verify.mjs"
+    "docker:verify": "node scripts/docker-verify.mjs",
+    "audit:decisions": "node scripts/decision-audit.mjs"
   },
-  "devDependencies": { "@qloo/qloo-harness": "0.1.26" }
+  "devDependencies": {
+    "@qloo/qloo-harness": "0.1.26"
+  }
 }

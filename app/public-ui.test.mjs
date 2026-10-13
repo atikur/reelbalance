@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as reducers from './public/state.js';
+import * as persistence from './public/persistence.js';
+import * as replacement from './public/replacement.js';
 import { createProgrammeService } from './programme-service.mjs';
 
 const [appSource, pageSource, fixtureText] = await Promise.all([
@@ -120,7 +122,7 @@ function makeDocument() {
   document.addEventListener = (kind, listener) => document.listeners.set(kind, [...document.listeners.get(kind) ?? [], listener]);
   return document;
 }
-async function harness({ status = ready, handlers = {} } = {}) {
+async function harness({ status = ready, handlers = {}, storage = new Map() } = {}) {
   const document = makeDocument(); const requests = [];
   const fetch = async (path, options = {}) => {
     requests.push({ path, method: options.method ?? 'GET', body: options.body ? JSON.parse(options.body) : null });
@@ -136,17 +138,22 @@ async function harness({ status = ready, handlers = {} } = {}) {
   const imports = appSource.match(/^import\s*\{([\s\S]*?)\}\s*from\s*'\.\/state\.js';/);
   assert.ok(imports, 'app imports the real state reducers');
   const bindings = imports[1].replace(/\b(\w+)\s+as\s+(\w+)/g, '$1:$2');
-  const code = appSource.replace(imports[0], `const {${bindings}}=__reducers;`);
+  const code = appSource.replace(imports[0], `const {${bindings}}=__reducers;`)
+    .replace(/import\s*\{([^}]+)\}\s*from\s*'\.\/persistence\.js';/, 'const {$1}=__persistence;')
+    .replace(/import\s*\{([^}]+)\}\s*from\s*'\.\/replacement\.js';/, 'const {$1}=__replacement;');
   const context = vm.createContext({ document, fetch, __reducers: reducers, structuredClone, AbortSignal,
-    setTimeout: () => 1, clearTimeout: () => {}, window: { location: { reload() {} } }, console });
-  const bridge = await vm.runInContext(`(async()=>{${code}\nreturn {read:()=>structuredClone(state)};})()`, context);
+    __persistence: persistence, __replacement: replacement,
+    setTimeout: () => 1, clearTimeout: () => {}, window: { location: { reload() {} },
+      localStorage: {getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)} }, console });
+  const bridge = await vm.runInContext(`(async()=>{${code}\nreturn {read:()=>structuredClone(state),flush:()=>saveWorkspace()};})()`, context);
   const dispatch = async (kind, target) => {
     assert.ok(target, 'action control exists');
     if (kind === 'click') { target.focus({ preventScroll: true }); if (target.disabled) return; }
+    if (kind === 'input' && target.disabled) return;
     const event = { target, preventDefault() {} };
     for (const listener of document.listeners.get(kind) ?? []) await listener(event);
   };
-  return { document, requests, read: bridge.read,
+  return { document, requests, storage, read: bridge.read, flush: bridge.flush,
     click: selector => dispatch('click', document.querySelector(selector)),
     input: async (selector, value) => { const node = document.querySelector(selector); assert.ok(node); node.value = value; await dispatch('input', node); },
   };
@@ -182,6 +189,64 @@ function assertWorkspaceKept(ui, before) {
   assert.deepEqual(ui.read().locked, before.locked);
   assert.deepEqual(ui.read().receipt, before.receipt);
 }
+
+test('reload restores approved order, locks, notes and unresolved cancellation without reviving a proposal or provider call',async()=>{
+  const handlers={'/api/programme':({body})=>service.programme(body),'/api/repair-options':({body})=>service.repairOptions(body)};
+  const ui=await harness({handlers});
+  await ui.click('[data-action="plan"]');await ui.click('[data-action="approve"]');
+  const approved=ui.read().approved;
+  for(const id of approved.selection.slice(0,2))await ui.click(`[data-action="lock"][data-id="${id}"]`);
+  await ui.input('#season-name','Saved fictional season');await ui.input('#organiser-note','Discuss the ending.');
+  await ui.click(`[data-action="availability"][data-id="${approved.selection[2]}"]`);
+  assert.ok(ui.read().proposal,'repair still pending');
+  assert.ok(ui.document.querySelector('.replacement-reasons summary'),'replacement explanation is rendered');
+  await ui.flush();
+  const stored=ui.storage.get(persistence.STORAGE_KEY);
+  const restored=await harness({storage:ui.storage,handlers});
+  assert.deepEqual(restored.read().approved,approved);
+  assert.deepEqual(restored.read().locked,approved.selection.slice(0,2));
+  assert.deepEqual(restored.read().excluded,[approved.selection[2]]);
+  assert.equal(restored.read().seasonName,'Saved fictional season');
+  assert.equal(restored.read().organiserNote,'Discuss the ending.');
+  assert.equal(restored.read().proposal,null);assert.equal(restored.read().busy,false);
+  assert.equal(restored.document.querySelector('[data-action="export"]').disabled,true);
+  assert.match(restored.document.querySelector('.programme-callout').textContent,/unavailable/);
+  assert.equal(restored.requests.some(request=>request.method==='POST'),false);
+  assert.equal(ui.storage.get(persistence.STORAGE_KEY),stored,'boot did not change the saved programme');
+});
+
+test('corrupt saved work is held until explicit reset and does not block manual planning',async()=>{
+  const storage=new Map([[persistence.STORAGE_KEY,'{broken']]);
+  const ui=await harness({storage,handlers:{'/api/programme':({body})=>service.programme(body)}});
+  assert.ok(ui.document.querySelector('[data-action="workspace-discard"]'));
+  await ui.click('[data-action="plan"]');await ui.click('[data-action="approve"]');await ui.flush();
+  assert.ok(ui.read().approved);assert.equal(storage.get(persistence.STORAGE_KEY),'{broken');
+  await ui.click('[data-action="workspace-discard"]');await ui.flush();
+  assert.equal(ui.read().approved,null);assert.equal(ui.document.querySelector('[data-action="workspace-discard"]'),null);
+  assert.equal(JSON.parse(storage.get(persistence.STORAGE_KEY)).programme.approved,null);
+});
+
+test('restored custom collection checks the current guard explicitly before a live ranking action',async()=>{
+  const evidenceId='rb-taste-'+'2'.repeat(32);
+  const artists=fixture.profiles.map((profile,index)=>({id:'pending-artist-'+index,name:profile.reference,type:'artist'}));
+  const packet={schemaVersion:1,evidenceId,status:'pending',profileCount:3,completedProfiles:1,artists,nextProfile:{...artists[1],index:1},qlooRequests:0,guard:{}};
+  const original=reducers.createState(fixture);
+  original.taste={...original.taste,evidenceId,selected:artists.map(artist=>({artistId:artist.id,searchId:'search-'+artist.id,name:artist.name})),packet};
+  const storage=new Map([[persistence.STORAGE_KEY,JSON.stringify(await persistence.createWorkspaceSnapshot(original))]]);
+  const ui=await harness({storage,handlers:{
+    ['/api/tastes/progress?evidenceId='+evidenceId]:()=>packet,
+    '/api/tastes/status':()=>({schemaVersion:1,liveEnabled:true,guard:{busy:false,paused:false,remainingRequests:12,nextAllowedAt:null},knownArtists:{searchId:'known-search',options:artists}}),
+  }});
+  assert.equal(ui.read().taste.status,null);
+  assert.equal(ui.document.querySelector('[data-action="taste-rank"]').disabled,true);
+  assert.equal(ui.requests.some(request=>request.method==='POST'),false);
+  await ui.click('[data-action="taste-status"]');
+  assert.equal(ui.read().taste.status.liveEnabled,true);
+  assert.equal(ui.document.querySelector('[data-action="taste-rank"]').disabled,false);
+  assert.equal(ui.requests.some(request=>request.method==='POST'),false,'status recovery never retries ranking');
+  assert.equal(ui.document.querySelector('#operation-status').getAttribute('aria-live'),'polite');
+  assert.match(ui.document.querySelector('.taste-time').textContent,/five minutes of waiting/);
+});
 
 test('the season prompt follows two-night constraints and a live proposal stays unapproved and receives focus', async () => {
   const ui = await harness({ handlers: { '/api/agent': ({ body }) => ({ source: 'live', model: 'mock',
@@ -559,4 +624,101 @@ test('judge sign-in never sends blank credentials or repeats a pending request',
   assert.equal(ui.document.querySelector('#judge-password').value, '');
   assert.equal(ui.document.querySelector('#judge-error').textContent, '<b>Invalid supplied credentials</b>');
   assert.equal(ui.document.querySelector('#judge-error b'), null);
+});
+
+test('retrying saved evidence blocks edits and actions until its read-only progress check finishes', async t => {
+  let original = reducers.createState(fixture);
+  original = reducers.approveProposal(reducers.receiveProposal(original,
+    { result: service.programme(reducers.planningRequest(original)) }, original.revision));
+  original.seasonName = 'Saved fictional programme';
+  original.organiserNote = 'Saved discussion note.';
+  const evidenceId = 'rb-taste-' + '2'.repeat(32);
+  const artists = fixture.profiles.map((profile, index) => ({ id: 'retry-fictional-artist-' + index,
+    name: profile.reference }));
+  original.taste.evidenceId = evidenceId;
+  original.taste.selected = artists.map(artist => ({ artistId: artist.id, searchId: 'retry-fictional-search', name: artist.name }));
+  const serialized = JSON.stringify(await persistence.createWorkspaceSnapshot(original));
+  const storage = new Map([[persistence.STORAGE_KEY, serialized]]);
+  let progressCalls = 0, release, markStarted;
+  const held = new Promise(resolve => { release = resolve; });
+  const started = new Promise(resolve => { markStarted = resolve; });
+  t.after(() => release());
+  const ui = await harness({ storage, handlers: {
+    ['/api/tastes/progress?evidenceId=' + evidenceId]: async () => {
+      if (++progressCalls === 1) return { httpStatus: 503, error: 'Injected saved-evidence outage.' };
+      markStarted(); await held;
+      return { schemaVersion: 1, evidenceId, status: 'pending', profileCount: 3,
+        completedProfiles: 0, artists, qlooRequests: 0 };
+    },
+  } });
+  assert.ok(ui.document.querySelector('[data-action="workspace-retry"]'));
+  const before = ui.read();
+  const retry = ui.click('[data-action="workspace-retry"]');
+  await started;
+  assert.equal(ui.read().busy, true);
+  assert.equal(ui.document.querySelector('#season-name').disabled, true);
+  assert.equal(ui.document.querySelector('#organiser-note').disabled, true);
+  assert.equal(ui.document.querySelector('[data-action="plan"]').disabled, true);
+  await ui.input('#season-name', 'Attempted new name while restoring');
+  await ui.input('#organiser-note', 'Attempted new note while restoring');
+  await ui.click('[data-action="plan"]');
+  await ui.click('[data-action="agent-send"]');
+  await ui.click('#reset-button');
+  await ui.click('[data-action="workspace-retry"]');
+  assert.equal(ui.read().seasonName, before.seasonName);
+  assert.equal(ui.read().organiserNote, before.organiserNote);
+  assert.deepEqual(ui.read().approved, before.approved);
+  assert.equal(storage.get(persistence.STORAGE_KEY), serialized);
+  assert.equal(ui.requests.some(request => request.method === 'POST'), false);
+  release(); await retry;
+  assert.equal(ui.read().busy, false);
+  assert.equal(ui.read().seasonName, original.seasonName);
+  assert.equal(ui.read().organiserNote, original.organiserNote);
+  assert.deepEqual(ui.read().approved, original.approved);
+  assert.equal(ui.read().taste.evidenceId, evidenceId);
+  assert.equal(ui.read().taste.needsStatusCheck, true);
+  assert.equal(progressCalls, 2);
+  assert.equal(ui.requests.some(request => request.method === 'POST'), false, 'restore never retries or makes a paid request');
+});
+
+test('retry aborts a stale restore when another tab changes storage during its progress check', async t => {
+  let original = reducers.createState(fixture);
+  original = reducers.approveProposal(reducers.receiveProposal(original,
+    { result: service.programme(reducers.planningRequest(original)) }, original.revision));
+  original.seasonName = 'Original saved fictional programme';
+  const evidenceId = 'rb-taste-' + '3'.repeat(32);
+  const artists = fixture.profiles.map((profile, index) => ({ id: 'conflict-fictional-artist-' + index,
+    name: profile.reference }));
+  original.taste.evidenceId = evidenceId;
+  original.taste.selected = artists.map(artist => ({ artistId: artist.id, searchId: 'conflict-fictional-search', name: artist.name }));
+  const storage = new Map([[persistence.STORAGE_KEY, JSON.stringify(await persistence.createWorkspaceSnapshot(original))]]);
+  let progressCalls = 0, release, markStarted;
+  const held = new Promise(resolve => { release = resolve; });
+  const started = new Promise(resolve => { markStarted = resolve; });
+  t.after(() => release());
+  const ui = await harness({ storage, handlers: {
+    ['/api/tastes/progress?evidenceId=' + evidenceId]: async () => {
+      if (++progressCalls === 1) return { httpStatus: 503, error: 'Injected saved-evidence outage.' };
+      markStarted(); await held;
+      return { schemaVersion: 1, evidenceId, status: 'pending', profileCount: 3,
+        completedProfiles: 0, artists, qlooRequests: 0 };
+    },
+  } });
+  const before = ui.read();
+  const retry = ui.click('[data-action="workspace-retry"]');
+  await started;
+  const otherTab = structuredClone(original);
+  otherTab.seasonName = 'Newer fictional programme from another tab';
+  const newerSerialized = JSON.stringify(await persistence.createWorkspaceSnapshot(otherTab));
+  storage.set(persistence.STORAGE_KEY, newerSerialized);
+  release(); await retry;
+  assert.equal(ui.read().busy, false);
+  assert.equal(ui.read().seasonName, before.seasonName, 'stale restoration does not replace the visible workspace');
+  assert.deepEqual(ui.read().approved, before.approved);
+  assert.equal(ui.read().taste.evidenceId, before.taste.evidenceId, 'stale collection checkpoint is not applied');
+  assert.equal(storage.get(persistence.STORAGE_KEY), newerSerialized, 'the newer tab snapshot is retained');
+  assert.match(ui.document.querySelector('.workspace-save').textContent, /Another tab changed the saved programme/);
+  assert.ok(ui.document.querySelector('[data-action="workspace-retry"]'));
+  assert.equal(progressCalls, 2);
+  assert.equal(ui.requests.some(request => request.method === 'POST'), false);
 });

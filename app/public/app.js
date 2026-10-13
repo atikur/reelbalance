@@ -3,6 +3,8 @@ import {createState,planningRequest,changeConstraints,receiveProposal,approvePro
   enterRecordedDemo,canStageRecordedCancellation,stageRecordedCancellation,exitRecordedDemo,
   bindTasteEvidence,evidenceDate,tasteSourceLabel,normalizeArtistQuery,tasteLiveReady,openTastePicker,changeTasteQuery,confirmTasteArtist,tasteSelectionRequest,
   beginTasteOperation,failTasteOperation,receiveTasteStatus,receiveTasteSearch,receiveTasteProgress,applyTasteDataset,resetExampleState,escapeHtml as esc} from './state.js';
+import {STORAGE_KEY,createWorkspaceSnapshot,createWorkspaceStorage,restoreWorkspace} from './persistence.js';
+import {explainReplacement} from './replacement.js';
 
 const content=document.querySelector('#app-content');
 let state;
@@ -14,6 +16,73 @@ let deferredFocus;
 let accessStatusRequest=0;
 let readinessTimer;
 let workspaceBeforeReplay;
+let lastAnnouncement='';
+const workspaceStorage=createWorkspaceStorage({getStorage:()=>window.localStorage});
+let persistenceReady=false;
+let savedSerialized=null;
+let savedSnapshotBody=null;
+let saveSequence=0;
+let workspaceNotice=null;
+let savedWorkspaceBlocked=false;
+let savingUnavailable=false;
+let workspaceRestoreSequence=0;
+function renderSaveNotice() {
+  if(workspaceNotice)return `<div class="workspace-save warning"><span>${esc(workspaceNotice)}</span>${savedWorkspaceBlocked?'<button class="text-button" data-action="workspace-retry">Retry saved workspace</button><button class="text-button" data-action="workspace-discard">Start fresh</button>':''}</div>`;
+  return `<div class="workspace-save" id="workspace-save-label">${savedSnapshotBody?'Programme saved in this browser. Unapproved proposals are not restored.':'Preparing browser saving…'}</div>`;
+}
+async function saveWorkspace() {
+  if(!persistenceReady||savedWorkspaceBlocked||savingUnavailable||state.mode==='recorded')return;
+  const sequence=++saveSequence;
+  const current=structuredClone(state);
+  try {
+    const snapshot=await createWorkspaceSnapshot(current);
+    if(!snapshot||sequence!==saveSequence||savedWorkspaceBlocked)return;
+    const body=JSON.stringify({...snapshot,savedAt:null});
+    if(body===savedSnapshotBody)return;
+    const result=workspaceStorage.write(snapshot,{expectedSerialized:savedSerialized});
+    if(result.status==='saved'){savedSerialized=result.serialized;savedSnapshotBody=body;const label=document.querySelector('#workspace-save-label');if(label)label.textContent='Programme saved in this browser. Unapproved proposals are not restored.';return;}
+    workspaceNotice=result.status==='conflict'?'Another tab changed the saved programme. Reload to use its version, or start fresh here.':'Browser saving is unavailable. Keep this tab open and export your approved programme before leaving.';
+    savedWorkspaceBlocked=result.status==='conflict';
+    savingUnavailable=!savedWorkspaceBlocked;
+  } catch {if(sequence!==saveSequence)return;workspaceNotice='Browser saving is unavailable. Keep this tab open and export your approved programme before leaving.';savingUnavailable=true;}
+  render();
+  announce(workspaceNotice);
+}
+async function restoreSavedWorkspace() {
+  const restoreSequence=++workspaceRestoreSequence;
+  persistenceReady=false;++saveSequence;
+  const stored=workspaceStorage.read();
+  savedSerialized=stored.serialized??null;
+  savedSnapshotBody=null;workspaceNotice=null;savedWorkspaceBlocked=false;savingUnavailable=false;
+  if(stored.status==='ready') {
+    const packets=new Map();
+    for(const id of new Set([stored.snapshot.activeEvidenceId,stored.snapshot.checkpointEvidenceId].filter(Boolean))) {
+      try {
+        const response=await fetch('/api/tastes/progress?evidenceId='+encodeURIComponent(id),{signal:AbortSignal.timeout(10000)});
+        if(response.ok)packets.set(id,await response.json());
+      } catch {}
+    }
+    const restored=await restoreWorkspace(stored.snapshot,{exampleData:state.exampleData??state.data,
+      activeEvidencePacket:packets.get(stored.snapshot.activeEvidenceId),checkpointPacket:packets.get(stored.snapshot.checkpointEvidenceId)});
+    if(restoreSequence!==workspaceRestoreSequence||workspaceStorage.read().serialized!==stored.serialized) {
+      savedWorkspaceBlocked=true;workspaceNotice='Another tab changed the saved programme. Retry to load its version, or start fresh here.';persistenceReady=true;return;
+    }
+    if(restored.status==='restored') {
+      state=restored.state;
+      savedSnapshotBody=JSON.stringify({...stored.snapshot,savedAt:null});
+      if(restored.checkpointUnavailable){savedWorkspaceBlocked=true;workspaceNotice='Your programme is restored, but the saved artist collection could not be verified. Retry to recover it, or start fresh.';}
+      else announce(restored.issues.length?'Your approved programme is restored. Its unresolved changes still need review.':'Your saved programme is restored.');
+    } else {savedWorkspaceBlocked=true;workspaceNotice=restored.status==='obsolete'?'The saved programme uses an older catalogue or evidence version. Start fresh to use the current evidence.':'The saved programme evidence could not be verified. Retry to recover it, or start fresh. Your saved version is kept.';}
+  } else if(stored.status==='unavailable'){workspaceNotice='Browser saving is unavailable. Keep this tab open and export your approved programme before leaving.';savingUnavailable=true;}
+  else if(stored.status!=='empty'){savedWorkspaceBlocked=true;workspaceNotice='The saved programme could not be read safely. Start fresh to save a new programme.';}
+  persistenceReady=true;
+}
+function announce(message) {
+  if(!message||message===lastAnnouncement)return;
+  lastAnnouncement=message;
+  const status=document.querySelector('#operation-status');
+  if(status)status.textContent=message;
+}
 const synthetic=()=>state?.data.dataset.synthetic===true;
 const icon=(name)=>({lock:'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="8" width="12" height="9" rx="2"/><path d="M6.5 8V5a3.5 3.5 0 0 1 7 0v3"/></svg>',unlock:'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="8" width="12" height="9" rx="2"/><path d="M7 8V5a3.5 3.5 0 0 1 6.7-1.4"/></svg>',check:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg>',arrow:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5"/></svg>'}[name]??'');
 const film=id=>state.data.films.find(f=>f.id===id);
@@ -64,16 +133,16 @@ function renderTastePicker() {
   const confirmed=taste.selected.filter(Boolean).length;
   const waiting=guard?.nextAllowedAt&&new Date(guard.nextAllowedAt).getTime()>Date.now();
   const qlooQuota=guestAccess()&&Number.isInteger(guard?.guestRemainingQlooRequests)&&Number.isInteger(guard?.guestMaxQlooRequestsPerDay)?` ${guard.guestRemainingQlooRequests}/${guard.guestMaxQlooRequestsPerDay} live artist requests remain in this browser today.`:Number.isInteger(guard?.remainingRequests)?` ${guard.remainingRequests}/${guard.dailyAttemptLimit} attempts remain this UTC day.`:'';
-  const readiness=state.sessionAccessExpired?'Your browser session expired. Check availability to continue.':guard?.busy?'A ranking request needs an organiser review before continuing.':guard?.paused?'Live artist requests are paused.':guard?.remainingRequests===0?'Today’s live artist allowance is used.':!taste.status?'Checking artist availability…':!taste.status.liveEnabled?'Live artist requests are unavailable. Your example programme remains available.':waiting?`Next live request in <span class="taste-countdown">${Math.ceil((new Date(guard.nextAllowedAt).getTime()-Date.now())/1000)} seconds</span>.`:'Ready to search or collect one artist’s rankings.';
+  const readiness=state.sessionAccessExpired?'Your browser session expired. Check availability to continue.':guard?.busy?'An artist request is in progress. Check saved progress when it finishes.':guard?.paused?'Live artist requests are paused. Check availability for recovery information.':guard?.remainingRequests===0?'Today’s live artist allowance is used.':!taste.status?'Checking artist availability…':!taste.status.liveEnabled?'Live artist requests are unavailable. Your example programme remains available.':waiting?`Your completed work is kept. Next live request in <span class="taste-countdown">${Math.ceil((new Date(guard.nextAllowedAt).getTime()-Date.now())/1000)} seconds</span>.`:'Ready to search or collect one artist’s rankings.';
   const matches=(options,searchId,index,source,date)=>options.map(artist=>{
     const selected=taste.selected[index]?.artistId===artist.id;
     const duplicate=taste.selected.some((pick,i)=>i!==index&&pick?.artistId===artist.id);
     return `<li><div><strong>${esc(artist.name)}</strong><small>${source==='live'?'Qloo artist match':'Saved Qloo artist match'} · ${esc(evidenceDate(date))}</small></div><button class="button secondary small" data-action="taste-confirm" data-index="${index}" data-search-id="${esc(searchId)}" data-artist-id="${esc(artist.id)}" ${state.busy||duplicate?'disabled':''}>${selected?'Confirmed':duplicate?'Already selected':'Choose'}</button></li>`;
   }).join('');
-  return `<section class="panel taste-picker" aria-label="Choose three music artists"><div class="taste-picker-heading"><div><span class="tiny-label">MAKE IT YOUR SEASON</span><h2>Choose three music references.</h2></div><button class="text-button" data-action="taste-close" ${disabled()}>Close</button></div><ol class="taste-stages"><li class="${confirmed===3?'complete':'current'}">Choose artists</li><li class="${packet?.status==='complete'?'complete':confirmed===3?'current':''}">Collect film rankings</li><li>Start your programme</li></ol><p class="taste-intro">Each artist is ranked against the same ${state.data.films.length}-film shortlist. Your programme stays in place until you apply the completed profiles.</p><div class="taste-readiness"><p>${readiness}</p><button class="text-button" data-action="taste-status" ${disabled()}>${taste.pending?.kind==='status'?'Checking…':'Check availability'}</button></div>${taste.needsStatusCheck?'<p class="taste-notice">The last request stopped. Check availability before continuing.</p>':''}${taste.error?`<p class="agent-error" role="alert">${esc(taste.error)}</p>`:''}<div class="artist-pickers">${Array.from({length:3},(_,index)=>{
+  return `<section class="panel taste-picker" aria-label="Choose three music artists"><div class="taste-picker-heading"><div><span class="tiny-label">MAKE IT YOUR SEASON</span><h2>Choose three music references.</h2></div><button class="text-button" data-action="taste-close" ${disabled()}>Close</button></div><ol class="taste-stages"><li class="${confirmed===3?'complete':'current'}">Choose artists</li><li class="${packet?.status==='complete'?'complete':confirmed===3?'current':''}">Collect film rankings</li><li>Start your programme</li></ol><p class="taste-intro">Each artist is ranked against the same ${state.data.films.length}-film shortlist. Your programme stays in place until you apply the completed profiles.</p><p class="taste-time">New artists take a few minutes: three searches and three rankings, with a 60-second gap between live requests (about five minutes of waiting, plus processing). Saved matches and rankings can be quicker. Close this panel to keep planning while you wait.</p><div class="taste-readiness"><p>${readiness}</p><button class="text-button" data-action="taste-status" ${disabled()}>${taste.pending?.kind==='status'?'Checking…':'Check availability'}</button></div>${taste.needsStatusCheck?'<p class="taste-notice">The last request stopped. Check availability before continuing.</p>':''}${taste.error?`<p class="agent-error" role="alert">${esc(taste.error)}</p>`:''}<div class="artist-pickers">${Array.from({length:3},(_,index)=>{
     const selection=taste.selected[index],search=taste.searches[index];
     return `<section class="artist-picker profile-${index}"><span class="tiny-label">REFERENCE ${String(index+1).padStart(2,'0')}</span><label class="form-label" for="artist-query-${index}">Artist name</label><div class="artist-search"><input class="field" id="artist-query-${index}" type="search" maxlength="80" data-artist-query="${index}" value="${esc(taste.queries[index])}" placeholder="Type an artist name" ${disabled()}><button class="button secondary small" data-action="taste-search" data-index="${index}" ${state.busy||!taste.queries[index].trim()?'disabled':''}>${taste.pending?.kind==='search'&&taste.pending.index===index?'Searching…':tasteRequestBlocked()?'Search saved':'Search'}</button></div>${selection?`<div class="artist-confirmed">${icon('check')}<span><strong>${esc(selection.name)}</strong>Artist confirmed</span></div>`:'<p class="artist-selection-hint">Choose a match below.</p>'}${search?`<ul class="artist-matches" aria-label="Artist search matches">${matches(search.options,search.searchId,index,search.source,search.fetchedAt)||'<li>No matches. Try another artist name.</li>'}</ul>`:''}${known?`<details class="known-artists"><summary>Choose an example artist</summary><ul class="artist-matches">${matches(known.options,known.searchId,index,known.source,known.fetchedAt)}</ul></details>`:''}</section>`;
-  }).join('')}</div><div class="taste-prepare"><span>${confirmed} of 3 artists chosen</span><button class="button secondary" data-action="taste-select" ${state.busy||confirmed!==3?'disabled':''}>Prepare film rankings ${icon('arrow')}</button></div>${packet?`<div class="taste-progress"><div class="section-heading"><h3>Your film rankings</h3><span class="badge ${packet.status==='complete'?'':'neutral'}">${packet.completedProfiles}/3 ready</span></div><ol class="taste-rank-steps">${packet.artists.map((artist,index)=>`<li class="${artist.rankSource?'complete':''}"><b>${String(index+1).padStart(2,'0')}</b><div><strong>${esc(artist.name)}</strong><small>${artist.rankSource?`Qloo rankings ready · ${esc(evidenceDate(artist.rankedAt))}${artist.unknownFilmCount?` · ${artist.unknownFilmCount} unknown ranks`:''}`:'Ready to collect film rankings'}</small></div></li>`).join('')}</ol>${packet.status==='complete'?`<div class="taste-apply"><p>Applying these profiles starts a fresh programme and clears your current selections, locks and approvals. Your artist evidence stays saved; programme selections reset on reload.</p><button class="button primary" data-action="taste-apply" ${disabled()}>Start programme with these artists ${icon('arrow')}</button></div>`:`<div class="taste-step-actions"><button class="button primary" data-action="taste-rank" ${tasteRequestBlocked()||packet.status!=='pending'?'disabled':''}>${taste.pending?.kind==='rank'?'Collecting rankings…':`Collect rankings for ${esc(packet.nextProfile?.name??'next artist')}`} ${icon('arrow')}</button><button class="text-button" data-action="taste-progress" ${disabled()}>Check saved progress</button></div>`}</div>`:''}<details class="taste-controls"><summary>Sources & request limits</summary><p>Each explicit search or ranking step makes at most one Qloo request, with at least 60 seconds between live requests. Requests are never retried automatically.${qlooQuota}${guard?.pauseReason?` Pause reason: ${esc(guard.pauseReason)}.`:''}</p><p>Saved artist matches and completed rankings are reused. Only this fixed shortlist is ranked; missing ranks stay unknown and filters never renumber the original ranks.</p>${packet?packet.artists.filter(a=>a.rankSource).map(a=>`<p>${esc(a.name)}: ${esc(sourceLabel(a.rankSource))}, ${a.returnedCount??0}/${state.data.films.length} films scored.</p>`).join(''):''}</details></section>`;
+  }).join('')}</div><div class="taste-prepare"><span>${confirmed} of 3 artists chosen</span><button class="button secondary" data-action="taste-select" ${state.busy||confirmed!==3?'disabled':''}>Prepare film rankings ${icon('arrow')}</button></div>${packet?`<div class="taste-progress"><div class="section-heading"><h3>Your film rankings</h3><span class="badge ${packet.status==='complete'?'':'neutral'}">${packet.completedProfiles}/3 ready</span></div><ol class="taste-rank-steps">${packet.artists.map((artist,index)=>`<li class="${artist.rankSource?'complete':''}"><b>${String(index+1).padStart(2,'0')}</b><div><strong>${esc(artist.name)}</strong><small>${artist.rankSource?`Qloo rankings ready · ${esc(evidenceDate(artist.rankedAt))}${artist.unknownFilmCount?` · ${artist.unknownFilmCount} unknown ranks`:''}`:'Ready to collect film rankings'}</small></div></li>`).join('')}</ol>${packet.status==='complete'?`<div class="taste-apply"><p>Applying these profiles starts a fresh programme and clears your current selections, locks and approvals. Your approved programme and this collection checkpoint are saved in this browser when storage is available.</p><button class="button primary" data-action="taste-apply" ${disabled()}>Start programme with these artists ${icon('arrow')}</button></div>`:`<div class="taste-step-actions"><button class="button primary" data-action="taste-rank" ${tasteRequestBlocked()||packet.status!=='pending'?'disabled':''}>${taste.pending?.kind==='rank'?'Collecting rankings…':`Collect rankings for ${esc(packet.nextProfile?.name??'next artist')}`} ${icon('arrow')}</button><button class="text-button" data-action="taste-progress" ${disabled()}>Check saved progress</button></div>`}</div>`:''}<details class="taste-controls"><summary>Sources & request limits</summary><p>Each explicit search or ranking step makes at most one Qloo request, with at least 60 seconds between live requests. Requests are never retried automatically.${qlooQuota}${guard?.pauseReason?` Pause reason: ${esc(guard.pauseReason)}.`:''}</p><p>Saved artist matches and completed rankings are reused. Only this fixed shortlist is ranked; missing ranks stay unknown and filters never renumber the original ranks.</p>${packet?packet.artists.filter(a=>a.rankSource).map(a=>`<p>${esc(a.name)}: ${esc(sourceLabel(a.rankSource))}, ${a.returnedCount??0}/${state.data.films.length} films scored.</p>`).join(''):''}</details></section>`;
 }
 function scheduleTasteReadiness() {
   clearTimeout(readinessTimer);
@@ -83,7 +152,7 @@ function scheduleTasteReadiness() {
   const tick=()=>{
     if(!state.taste.open||state.mode==='recorded')return;
     const seconds=Math.ceil((deadline-Date.now())/1000);
-    if(seconds<=0){render();return;}
+    if(seconds<=0){render();announce('The waiting interval has ended. You can continue with the next explicit artist request.');return;}
     const label=content.querySelector('.taste-countdown');
     if(label)label.textContent=`${seconds} seconds`;
     readinessTimer=setTimeout(tick,Math.min(1000,deadline-Date.now()));
@@ -113,7 +182,7 @@ function renderSupport(ids,context=state) {
 }
 function renderBrief() {
   const ids=availableIds();
-  return `<section class="panel brief-panel" aria-label="Programme brief"><span class="tiny-label">THE PARAMETERS</span><h2>Your season brief</h2><div class="brief-layout"><div class="field-title"><label class="form-label" for="season-name">Programme name</label><input class="field" id="season-name" value="${esc(state.seasonName)}" maxlength="80"></div><div><label class="form-label">Screening nights</label><div class="segmented" role="group" aria-label="Screening nights"><button data-action="slots" data-count="2" aria-pressed="${state.slots===2}" ${editDisabled()}>2 nights</button><button data-action="slots" data-count="3" aria-pressed="${state.slots===3}" ${editDisabled()}>3 nights</button></div></div><div><label class="form-label" for="runtime-limit">Maximum film runtime</label><div class="field-row"><input class="field" id="runtime-limit" type="number" min="1" max="240" step="1" value="${state.maximumRuntime}" ${editDisabled()}><span class="field-unit">minutes</span></div></div></div><div class="brief-divider"></div><div class="brief-summary"><span>Within your shortlist & limit</span><strong>${ids.length} films</strong></div><div class="brief-summary"><span>Locked decisions</span><strong>${state.locked.length} ${state.locked.length===1?'film':'films'}</strong></div><button class="button secondary full" data-action="plan" ${editDisabled()}>${state.busy?'Checking the programme…':state.approved?'Review programme manually':'Build draft manually'}${icon('arrow')}</button><p class="brief-hint">${state.mode==='recorded'?'Use the recorded-demo controls above. Return to your programme to edit this brief.':state.approved?'Changes stay proposals until you approve them.':state.evidenceId?'Build a new draft with your confirmed artist references. Every selection still needs approval.':'Start with these example tastes. Review the draft, then make it yours.'}</p></section>`;
+  return `<section class="panel brief-panel" aria-label="Programme brief"><span class="tiny-label">THE PARAMETERS</span><h2>Your season brief</h2><div class="brief-layout"><div class="field-title"><label class="form-label" for="season-name">Programme name</label><input class="field" id="season-name" value="${esc(state.seasonName)}" maxlength="80" ${editDisabled()}></div><div><label class="form-label">Screening nights</label><div class="segmented" role="group" aria-label="Screening nights"><button data-action="slots" data-count="2" aria-pressed="${state.slots===2}" ${editDisabled()}>2 nights</button><button data-action="slots" data-count="3" aria-pressed="${state.slots===3}" ${editDisabled()}>3 nights</button></div></div><div><label class="form-label" for="runtime-limit">Maximum film runtime</label><div class="field-row"><input class="field" id="runtime-limit" type="number" min="1" max="240" step="1" value="${state.maximumRuntime}" ${editDisabled()}><span class="field-unit">minutes</span></div></div></div><details class="brief-notes"><summary>Add a note to the programme sheet</summary><label class="form-label" for="organiser-note">Organiser note</label><textarea class="field" id="organiser-note" maxlength="800" rows="3" ${editDisabled()}>${esc(state.organiserNote)}</textarea></details><div class="brief-divider"></div><div class="brief-summary"><span>Within your shortlist & limit</span><strong>${ids.length} films</strong></div><div class="brief-summary"><span>Locked decisions</span><strong>${state.locked.length} ${state.locked.length===1?'film':'films'}</strong></div><button class="button secondary full" data-action="plan" ${editDisabled()}>${state.busy?'Checking the programme…':state.approved?'Review programme manually':'Build draft manually'}${icon('arrow')}</button><p class="brief-hint">${state.mode==='recorded'?'Use the recorded-demo controls above. Return to your programme to edit this brief.':state.approved?'Changes stay proposals until you approve them.':state.evidenceId?'Build a new draft with your confirmed artist references. Every selection still needs approval.':'Start with these example tastes. Review the draft, then make it yours.'}</p></section>`;
 }
 function renderReceipt() {
   if(!state.receipt)return `<section class="panel receipt"><span class="tiny-label">A SIMPLE WORKFLOW</span><h3>Keep the good decisions.</h3><p>Build a programme. Lock the films you want to keep. If one drops out, review what changes before accepting a replacement.</p><ul><li>${state.data.films.length} films in the vetted shortlist</li><li>Three declared taste profiles</li></ul></section>`;
@@ -187,7 +256,12 @@ function renderProposal() {
   const added=r.changes.added.map(id=>name(id));
   const change=initial ? r.nightOrder.map(name).join(' · ') : removed.length ? `${removed.join(', ')} → ${added.join(', ')||'remove this night'}` : added.length?`Keep the current films; add ${added.join(', ')}.`:'Keep the current films.';
   const currentButton=initial?(warning?'Approve with this shortfall':'Approve this programme'):warning?'Accept the disclosed shortfall':'Approve this change';
-  return `<section class="proposal-panel ${warning?'warning':''} motion-in" aria-label="Proposed programme changes"><div class="proposal-top"><div><span class="tiny-label">${initial?'YOUR DRAFT IS READY':'REVIEW BEFORE APPROVING'}</span><h2>${initial?(warning?'A season with a trade-off.':'A place for each taste.'):warning?'A replacement has a trade-off.':'Keep the choices. Restore the season.'}</h2></div><span class="badge ${warning?'warn':''}">${supported}/${state.data.profiles.length} supported</span></div><span class="badge neutral">${proposalSource}</span><p class="proposal-intro">${warning?`The proposed programme leaves ${missing.map(p=>esc(p.reference)).join(' and ')} without a selected top-five film. ${separateSupport?'Each available film supports at most one profile under the original top-five policy, so two films cannot give all three known support. You can accept a disclosed shortfall or return to three nights.':'Choose whether to accept that shortfall or adjust a constraint.'}`:initial?(synthetic()?'The draft uses invented fixture ranks within your shortlist and runtime limit. Nothing is approved yet.':'The draft uses your Qloo rankings within the shortlist and runtime limit. Nothing is approved yet.'):'This proposal keeps every locked choice and respects your current shortlist. The programme changes only when you approve.'}</p>${briefChanges}<div class="proposal-options ${alternative?'':'single'}"><article class="proposal-option"><span class="option-kicker">${initial?'PROPOSED PROGRAMME':target.maximumRuntime===state.maximumRuntime?'KEEP YOUR CURRENT LIMIT':'PROPOSED BRIEF'} · ${target.maximumRuntime} MIN</span><h3>${initial?`Review your ${target.slots} nights`:added.length?esc(added.join(', ')):'Keep the programme'}</h3><p class="change-line">${esc(change)}</p><p class="status-line ${warning?'warn':''}">${warning?`${missing.map(p=>esc(p.reference)).join(', ')}: no selected top-five film.`:`${supported}/${state.data.profiles.length} references have top-five films.`}</p><p class="status-line">${state.locked.length} locked choices kept.</p>${renderOptionEvidence(r,target)}<button class="button ${warning?'secondary':'primary'}" data-action="approve" data-kind="current" ${disabled()}>${currentButton}${icon('check')}</button></article>${alternative?`<article class="proposal-option alt"><span class="option-kicker">RAISE LIMIT TO ${alternative.maximumRuntime} MIN · +${alternative.maximumRuntime-target.maximumRuntime}</span><h3>${esc(alternative.result.changes.added.map(name).join(', '))}</h3><p class="change-line">${esc(alternative.result.changes.removed.map(name).join(', '))} → ${esc(alternative.result.changes.added.map(name).join(', '))}</p><p class="status-line">${alternative.result.represented}/${state.data.profiles.length} references have top-five films. ${state.locked.length} locked choices kept.</p>${renderOptionEvidence(alternative.result,{...target,maximumRuntime:alternative.maximumRuntime})}<button class="button primary" data-action="approve" data-kind="runtime" ${disabled()}>Allow ${alternative.maximumRuntime} min & approve${icon('check')}</button></article>`:''}</div>${warning && target.slots===2 && !alternative?'<div class="conflict-actions"><button class="button secondary small" data-action="slots-review" data-count="3">Review with three nights</button></div>':''}</section>`;
+  return `<section class="proposal-panel ${warning?'warning':''} motion-in" aria-label="Proposed programme changes"><div class="proposal-top"><div><span class="tiny-label">${initial?'YOUR DRAFT IS READY':'REVIEW BEFORE APPROVING'}</span><h2>${initial?(warning?'A season with a trade-off.':'A place for each taste.'):warning?'A replacement has a trade-off.':'Keep the choices. Restore the season.'}</h2></div><span class="badge ${warning?'warn':''}">${supported}/${state.data.profiles.length} supported</span></div><span class="badge neutral">${proposalSource}</span><p class="proposal-intro">${warning?`The proposed programme leaves ${missing.map(p=>esc(p.reference)).join(' and ')} without a selected top-five film. ${separateSupport?'Each available film supports at most one profile under the original top-five policy, so two films cannot give all three known support. You can accept a disclosed shortfall or return to three nights.':'Choose whether to accept that shortfall or adjust a constraint.'}`:initial?(synthetic()?'The draft uses invented fixture ranks within your shortlist and runtime limit. Nothing is approved yet.':'The draft uses your Qloo rankings within the shortlist and runtime limit. Nothing is approved yet.'):'This proposal keeps every locked choice and respects your current shortlist. The programme changes only when you approve.'}</p>${briefChanges}<div class="proposal-options ${alternative?'':'single'}"><article class="proposal-option"><span class="option-kicker">${initial?'PROPOSED PROGRAMME':target.maximumRuntime===state.maximumRuntime?'KEEP YOUR CURRENT LIMIT':'PROPOSED BRIEF'} · ${target.maximumRuntime} MIN</span><h3>${initial?`Review your ${target.slots} nights`:added.length?esc(added.join(', ')):'Keep the programme'}</h3><p class="change-line">${esc(change)}</p><p class="status-line ${warning?'warn':''}">${warning?`${missing.map(p=>esc(p.reference)).join(', ')}: no selected top-five film.`:`${supported}/${state.data.profiles.length} references have top-five films.`}</p><p class="status-line">${state.locked.length} locked choices kept.</p>${renderOptionEvidence(r,target)}${renderReplacement(r,target)}<button class="button ${warning?'secondary':'primary'}" data-action="approve" data-kind="current" ${disabled()}>${currentButton}${icon('check')}</button></article>${alternative?`<article class="proposal-option alt"><span class="option-kicker">RAISE LIMIT TO ${alternative.maximumRuntime} MIN · +${alternative.maximumRuntime-target.maximumRuntime}</span><h3>${esc(alternative.result.changes.added.map(name).join(', '))}</h3><p class="change-line">${esc(alternative.result.changes.removed.map(name).join(', '))} → ${esc(alternative.result.changes.added.map(name).join(', '))}</p><p class="status-line">${alternative.result.represented}/${state.data.profiles.length} references have top-five films. ${state.locked.length} locked choices kept.</p>${renderOptionEvidence(alternative.result,{...target,maximumRuntime:alternative.maximumRuntime})}${renderReplacement(alternative.result,{...target,maximumRuntime:alternative.maximumRuntime})}<button class="button primary" data-action="approve" data-kind="runtime" ${disabled()}>Allow ${alternative.maximumRuntime} min & approve${icon('check')}</button></article>`:''}</div>${warning && target.slots===2 && !alternative?'<div class="conflict-actions"><button class="button secondary small" data-action="slots-review" data-count="3">Review with three nights</button></div>':''}</section>`;
+}
+function renderReplacement(result,target) {
+  const explanation=explainReplacement(state.data,planningRequest(target),result);
+  if(!explanation)return '';
+  return `<details class="replacement-reasons"><summary>${esc(explanation.title)}</summary><p>${esc(explanation.summary)}</p>${[...explanation.recovered,...explanation.unresolved].map(reference=>`<h4>${esc(reference.reference)} · original top-five candidates</h4><p>${esc(reference.candidateSummary)}</p><div class="table-wrap" tabindex="0" role="region" aria-label="${esc(reference.reference)} candidate evidence"><table><thead><tr><th scope="col">Original rank</th><th scope="col">Film</th><th scope="col">Planning runtime</th><th scope="col">Decision evidence</th></tr></thead><tbody>${reference.candidates.map(candidate=>`<tr><td>#${candidate.rank}</td><td>${esc(candidate.name)}</td><td>${candidate.runtime} min</td><td>${esc(candidate.reason)}</td></tr>`).join('')}</tbody></table></div>${reference.hasUnknownEligibleFilms?'<p>Other eligible films have unknown ranks. No top-five support is inferred for them.</p>':''}`).join('')}${explanation.locks.length?`<p>${explanation.locks.map(lock=>`${esc(lock.name)} stays on Night ${lock.night}.`).join(' ')}</p>`:''}${explanation.unresolved.length?`<p>${explanation.unresolved.map(reference=>esc(reference.reference)).join(', ')} still has no selected film with known original top-five support.</p>`:''}${explanation.unknown.length?'<p>Some proposed film/reference ranks are unknown and contribute no assumed support.</p>':''}<p>${esc(explanation.policy)}</p></details>`;
 }
 function renderProgramme() {
   const draft=!state.approved&&state.proposal?.result?.selection;
@@ -196,7 +270,7 @@ function renderProgramme() {
   const issues=state.approved?selectionProblems(state,ids):[];
   const canExport=!!state.approved&&!issues.length;
   const slotsCount=Math.max(draftContext.slots,ids.length);
-  return `${heading('YOUR PROGRAMME','Make room for different tastes.','Plan a film-club season. When one film drops out, keep the nights you love and review a replacement.')}${state.mode==='recorded'?renderRecordedGuide():''}<div class="planning-setup">${renderBrief()}${renderAgent()}</div>${renderProfiles()}<div class="evidence-link"><span>${synthetic()?'Invented setup rankings':'Qloo taste rankings'} · ${esc(evidenceDate(state.data.dataset.checkedAt))}</span><button class="text-button" data-action="view-evidence">Explore taste evidence ↗</button></div>${renderTastePicker()}<div class="programme-stage"><div class="programme-decisions"><section class="panel programme-panel"><div class="section-heading"><h2>${state.approved?'Your approved programme':draft?'Your draft programme':`Your season, in ${state.slots===2?'two':'three'} acts.`}</h2><span class="badge ${issues.length?'warn':draft?'neutral':''}">${state.approved?issues.length?'Needs a review':'Approved':draft?'Draft':'Not started'}</span></div><div class="programme-slots ${slotsCount===2?'two-slots':''}">${Array.from({length:slotsCount},(_,i)=>ids[i]?filmCard(ids[i],i,!!draft,draftContext):emptySlot(i)).join('')}</div><div class="programme-callout ${issues.length?'warn':''}">${icon(issues.length?'arrow':'check')}<span>${issues.length?esc(issues[0]):state.approved?'Lock the nights you want to keep if your plans change.':draft?'Review the selections below, then approve your programme.':'Set your brief and plan with Luna, or build a draft with the manual tools.'}</span></div>${renderSupport(ids,draftContext)}<div class="programme-actions"><small>${canExport?'Ready to share. Confirm screening rights and the exact film-copy runtimes before screening.':state.approved?'Resolve the programme issue before exporting.':'Approve a valid programme to export its sheet.'}</small><button class="button ${canExport?'primary':'secondary'}" data-action="export" ${canExport?'':'disabled'}>Preview programme sheet <span>↗</span></button></div></section>${renderProposal()}</div><aside class="decision-sidebar">${renderReceipt()}</aside></div>${state.mode!=='recorded'?renderRecordedGuide():''}`;
+  return `${heading('YOUR PROGRAMME','Make room for different tastes.','Plan a film-club season. When one film drops out, keep the nights you love and review a replacement.')}${state.mode==='recorded'?renderRecordedGuide():''}${!state.approved&&!state.proposal&&state.mode!=='recorded'?`<section class="start-guide" aria-label="Start planning"><strong>${state.evidenceId?'Your references are ready.':'A ready example is waiting.'}</strong><span>${synthetic()?'Explore the manual planning tools with invented setup evidence.':state.evidenceId?'Build a draft, review it, then approve the programme.':'Start with genuine Qloo rankings already collected for the example. Build a draft manually or ask Luna; choose your own artists whenever you are ready.'}</span></section>`:''}<div class="planning-setup">${renderBrief()}${renderAgent()}</div>${renderProfiles()}<div class="evidence-link"><span>${synthetic()?'Invented setup rankings':'Qloo taste rankings'} · ${esc(evidenceDate(state.data.dataset.checkedAt))}</span><button class="text-button" data-action="view-evidence">Explore taste evidence ↗</button></div>${renderTastePicker()}<div class="programme-stage"><div class="programme-decisions"><section class="panel programme-panel"><div class="section-heading"><h2>${state.approved?'Your approved programme':draft?'Your draft programme':`Your season, in ${state.slots===2?'two':'three'} acts.`}</h2><span class="badge ${issues.length?'warn':draft?'neutral':''}">${state.approved?issues.length?'Needs a review':'Approved':draft?'Draft':'Not started'}</span></div><div class="programme-slots ${slotsCount===2?'two-slots':''}">${Array.from({length:slotsCount},(_,i)=>ids[i]?filmCard(ids[i],i,!!draft,draftContext):emptySlot(i)).join('')}</div><div class="programme-callout ${issues.length?'warn':''}">${icon(issues.length?'arrow':'check')}<span>${issues.length?esc(issues[0]):state.approved?'Lock the nights you want to keep if your plans change.':draft?'Review the selections below, then approve your programme.':'Set your brief and plan with Luna, or build a draft with the manual tools.'}</span></div>${renderSupport(ids,draftContext)}<div class="programme-actions"><small>${canExport?'Ready to share. Confirm screening rights and the exact film-copy runtimes before screening.':state.approved?'Resolve the programme issue before exporting.':'Approve a valid programme to export its sheet.'}</small><button class="button ${canExport?'primary':'secondary'}" data-action="export" ${canExport?'':'disabled'}>Preview programme sheet <span>↗</span></button></div></section>${renderProposal()}</div><aside class="decision-sidebar">${renderReceipt()}</aside></div>${state.mode!=='recorded'?renderRecordedGuide():''}`;
 }
 function renderCatalogue() {
   const all=state.data.films;
@@ -223,6 +297,7 @@ function render() {
   const position=focus.position??(inContent?[...content.querySelectorAll(controls)].filter(matches).indexOf(active):-1);
   deferredFocus=null;
   content.innerHTML=(state.error?`<div class="error-banner" role="alert">${esc(state.error)}</div>`:'')+
+    renderSaveNotice()+
     (state.mode==='recorded'&&state.view!=='programme'?'<div class="recorded-mode-banner"><strong>Recorded Luna walkthrough</strong><button class="text-button" data-action="demo-programme">Return to the demo</button><button class="text-button" data-action="demo-exit">Return to my programme</button></div>':'')+
     (state.view==='catalogue'?renderCatalogue():state.view==='evidence'?renderEvidence():renderProgramme());
   document.querySelectorAll('[data-view]').forEach(button=>{
@@ -241,6 +316,7 @@ function render() {
     }
   }
   scheduleTasteReadiness();
+  void saveWorkspace();
 }
 function focusHeading(selector,preventScroll=false) {
   const target=content.querySelector(selector);
@@ -257,7 +333,7 @@ async function requestPlan() {
   const revision=state.revision;
   const payload=bindTasteEvidence(state,planningRequest(state));
   const repair=!!state.approved;
-  state={...state,busy:true,error:null,proposal:null,agentResponse:null};render();
+  state={...state,busy:true,error:null,proposal:null,agentResponse:null};render();announce('Checking your programme against the brief. Nothing changes until approval.');
   try {
     const response=await fetch(repair?'/api/repair-options':'/api/programme',{
       method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)});
@@ -268,7 +344,7 @@ async function requestPlan() {
   } catch(error) {
     if(revision===state.revision){if(expiredAccess(error))markOwnerExpired(error);state={...state,busy:false,error:expiredAccessMessage()??(error.name==='TimeoutError'?'The local planning tool took too long. Please try again.':error.message)};}
   }
-  render();
+  render();announce(state.error??(state.proposal?'Your programme proposal is ready to review.':'Programme check finished.'));
   if(revision===state.revision&&state.proposal)focusHeading('.proposal-panel h2');
 }
 async function refreshAgentStatus({refreshAccess=false}={}) {
@@ -375,7 +451,7 @@ async function requestAgent() {
   if(!status?.configured||status.paused||status.busy||status.operatorReviewRequired||status.remainingRequests===0||status.providerStatus==='budget_unavailable'||state.ownerAccessExpired||state.sessionAccessExpired||(guestAccess()&&accessStatus.guestRemainingInteractions===0)){state.agentError='Luna is temporarily unavailable. Check availability before trying again.';render();return;}
   const revision=state.revision;
   const payload=bindTasteEvidence(state,{message,context:planningRequest(state)});
-  state={...state,agentMessage:message,busy:true,agentPending:true,agentError:null,agentErrorDetails:null,error:null,proposal:null,agentResponse:null};render();
+  state={...state,agentMessage:message,busy:true,agentPending:true,agentError:null,agentErrorDetails:null,error:null,proposal:null,agentResponse:null};render();announce('Luna is preparing your response. Your approved programme stays in place.');
   try {
     const response=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(100000)});
     const body=await response.json();
@@ -392,21 +468,22 @@ async function requestAgent() {
     }
   }
   try {await refreshAccessStatus();} catch {}
-  render();await refreshAgentStatus();
+  render();announce(state.agentError??(state.proposal?'Luna’s proposal is ready to review.':'Luna’s response is ready.'));await refreshAgentStatus();
   if(revision===state.revision)focusHeading(state.proposal?'.proposal-panel h2':state.agentResponse?'.agent-response':'.agent-panel h2');
 }
-function reset() {
+async function reset() {
   if(state.busy)return;
   if(state.mode==='recorded') {
     state=workspaceBeforeReplay?{...workspaceBeforeReplay,busy:false,agentPending:false,agentStatusBusy:false}:exitRecordedDemo(state);
-    workspaceBeforeReplay=null;render();focusHeading('.page-heading h1');notify('Your programme is restored.');void refreshAgentStatus();return;
+    workspaceBeforeReplay=null;render();focusHeading('.page-heading h1');notify('Your programme is restored.');await refreshAgentStatus();await saveWorkspace();return;
   }
-  state=resetExampleState(state);render();notify('The example programme is reset.');void refreshAgentStatus();
+  ++saveSequence;const cleared=workspaceStorage.clear();savedSerialized=null;savedSnapshotBody=null;savedWorkspaceBlocked=false;savingUnavailable=cleared.status!=='cleared';workspaceNotice=savingUnavailable?'The programme was reset in this tab, but browser storage could not be cleared. An older saved version may return on reload.':null;
+  state=resetExampleState(state);render();notify(workspaceNotice??'The example programme is reset.');await refreshAgentStatus();await saveWorkspace();
 }
 async function requestTaste(kind,index=null) {
   let token;
   try {
-    state=beginTasteOperation(state,kind,index);token=state.taste.pending;render();
+    state=beginTasteOperation(state,kind,index);token=state.taste.pending;render();announce(kind==='search'?'Searching for the artist.':kind==='rank'?`Collecting film rankings for ${state.taste.packet?.nextProfile?.name??'the next artist'}. Completed rankings are kept.`:kind==='select'?'Preparing your confirmed artist references.':'Checking saved artist availability and progress.');
     let path,body;
     if(kind==='status')path='/api/tastes/status';
     if(kind==='search'){path='/api/tastes/search';body={query:normalizeArtistQuery(state.taste.queries[index]),live:token.live};}
@@ -423,7 +500,7 @@ async function requestTaste(kind,index=null) {
     if(token)state=failTasteOperation(state,token,expiredAccessMessage()??(error.name==='TimeoutError'?'The taste request timed out. Nothing is retried; check saved progress and readiness.':error.message));
     else state={...state,taste:{...state.taste,error:error.message}};
   }
-  render();
+  render();announce(state.taste.error??(kind==='search'?`${state.taste.searches[index]?.options?.length??0} artist matches ready. Choose a match to confirm.`:state.taste.packet?.status==='complete'?'All three rankings are ready. Apply them to start your programme.':state.taste.packet?`${state.taste.packet.completedProfiles} of three artist rankings are ready.`:'Artist availability checked.'));
 }
 async function openRecordedDemo() {
   if(state.busy)return;
@@ -466,7 +543,7 @@ document.addEventListener('click',async event=>{
   if(!state)return;
   const nav=event.target.closest('[data-view]');
   if(nav){state.view=nav.dataset.view;render();focusHeading('.page-heading h1');return;}
-  if(event.target.closest('#reset-button')){reset();return;}
+  if(event.target.closest('#reset-button')){await reset();return;}
   if(event.target.closest('#download-sheet')){try{makeSheetHtml(state);}catch(error){event.preventDefault();notify(error.message);}return;}
   const button=event.target.closest('[data-action]');
   if(!button||button.disabled)return;
@@ -487,20 +564,27 @@ document.addEventListener('click',async event=>{
       notify(keepProgramme?'Signed out. Your programme is kept; public allowance is active.':'Signed out. The saved example is ready.');
     }catch(error){notify(error.message);}return;
   }
+  if(action==='workspace-retry'){
+    if(state.busy)return;state={...state,busy:true};render();announce('Checking your saved programme. Editing is paused until it finishes.');
+    try {await refreshAccessStatus().catch(()=>{});await restoreSavedWorkspace();}
+    finally {state={...state,busy:false};render();}
+    await refreshAgentStatus();return;
+  }
+  if(action==='workspace-discard'){await reset();return;}
   if(action==='facts'){showFilm(id);return;}
   if(action==='export'){openSheet();return;}
   if(action==='view-catalogue'||action==='view-evidence'){state.view=action==='view-catalogue'?'catalogue':'evidence';render();focusHeading('.page-heading h1');return;}
   if(action==='review-proposal'){focusHeading('.proposal-panel h2');return;}
   if(action==='demo-start'){await openRecordedDemo();return;}
   if(action==='demo-programme'){state.view='programme';render();focusHeading('.page-heading h1');return;}
-  if(action==='demo-exit'){reset();return;}
+  if(action==='demo-exit'){await reset();return;}
   if(action==='taste-open') {
     try {state=openTastePicker(state);render();if(!state.taste.status)await requestTaste('status');focusHeading('.taste-picker h2');}
     catch(error){notify(error.message);}return;
   }
   if(action==='taste-close'){if(!state.busy)state={...state,taste:{...state.taste,open:false}};render();return;}
   if(action==='taste-status'){
-    try {if(state.sessionAccessExpired)await refreshAccessStatus();await requestTaste(state.taste.evidenceId?'progress':'status');}
+    try {if(state.sessionAccessExpired)await refreshAccessStatus();await requestTaste('status');if(state.taste.evidenceId&&!state.taste.error)await requestTaste('progress');}
     catch(error){state={...state,taste:{...state.taste,error:error.message}};render();}return;
   }
   if(action==='taste-search'){await requestTaste('search',Number(button.dataset.index));return;}
@@ -564,8 +648,10 @@ document.addEventListener('change',async event=>{
   }
 });
 document.addEventListener('input',event=>{
-  if(!state)return;
+  if(!state||state.busy)return;
   if(event.target.id==='season-name')state.seasonName=event.target.value;
+  if(event.target.id==='organiser-note')state.organiserNote=event.target.value;
+  if(['season-name','organiser-note'].includes(event.target.id))void saveWorkspace();
   if(event.target.id==='agent-message') {
     state.agentMessage=event.target.value;
     const counter=document.querySelector('#agent-character-count');
@@ -579,6 +665,10 @@ document.addEventListener('input',event=>{
 });
 document.addEventListener('keydown',async event=>{if(event.key==='Enter'&&['judge-username','judge-password'].includes(event.target.id)){event.preventDefault();await signInJudge();}});
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+window.addEventListener?.('storage',event=>{
+  if(event.key!==STORAGE_KEY||event.newValue===savedSerialized)return;
+  ++saveSequence;++workspaceRestoreSequence;savedWorkspaceBlocked=true;workspaceNotice='Another tab changed the saved programme. Reload to use its version, or start fresh here.';render();announce(workspaceNotice);
+});
 
 try {
   const response=await fetch('/api/bootstrap',{signal:AbortSignal.timeout(10000)});
@@ -590,6 +680,7 @@ try {
     applyAccessStatus({packet:{...(error.accessStatus??{mode:'public',ownerAuthenticated:false,ownerSignInAvailable:false,recordedAvailable:false}),guestRemainingInteractions:0},requestId:accessStatusRequest});
     state.agentError=error.message+' Manual planning remains available.';
   }
+  await restoreSavedWorkspace();
   render();await refreshAgentStatus();
 } catch(error) {
   document.querySelector('#workspace-evidence-source').textContent='Catalogue unavailable';

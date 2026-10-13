@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "ReelBalance public source package",
   "kind": "source_and_synthetic_fixtures",
-  "generatedAt": "2026-10-12T17:34:14.741Z",
+  "generatedAt": "2026-10-13T04:20:32.454Z",
   "data": {
     "syntheticOnly": true,
     "containsApiResponses": false,
@@ -51,6 +51,11 @@
       "sha256": "2ce7af2291276635dff7766a7a721913e1ca06aa15a39a542df49f2c38873796"
     },
     {
+      "path": "app/programme-persistence.test.mjs",
+      "bytes": 15359,
+      "sha256": "3efb78dbfdd8b91a2a4be1a9cec58b19dca327895c04ebaab08bdd7fca958374"
+    },
+    {
       "path": "app/programme-service.mjs",
       "bytes": 12311,
       "sha256": "17e4f57ddd7c74e43756297eaf39716be6ac03480d3348406288b3af0599d442"
@@ -67,18 +72,18 @@
     },
     {
       "path": "app/public-http.test.mjs",
-      "bytes": 41537,
-      "sha256": "d8554d6c8f0e02fb5bc55942042b437321e5965cc93877497d33b46108c17d2f"
+      "bytes": 42145,
+      "sha256": "d175d8893f2d53eba2571eb7740e833ff848ee44f606e0e433a26f243881cb93"
     },
     {
       "path": "app/public-ui.test.mjs",
-      "bytes": 35989,
-      "sha256": "262f3be78fd7d23838a3dcb382526f3725b4ef3927b82b0b048fde15e5666b92"
+      "bytes": 46920,
+      "sha256": "ddf212023112263ece987dee5e79f0332416e37ee9debf01d7b89b891d27f936"
     },
     {
       "path": "app/public/app.js",
-      "bytes": 75129,
-      "sha256": "c4ad090cb5fed35f6ce4dbdf62502b077da5f56e1d6660a9bfb565153f7d7643"
+      "bytes": 85804,
+      "sha256": "1581132abc95f10bebed51bac007ce015812f28b9db93dd4ce92984927f8417a"
     },
     {
       "path": "app/public/favicon.svg",
@@ -87,8 +92,18 @@
     },
     {
       "path": "app/public/index.html",
-      "bytes": 5916,
-      "sha256": "2eb6df888e4dd36cc162a4a5a595ab129d70e672f1e75df44f3a5b63594dff96"
+      "bytes": 6024,
+      "sha256": "67120b22a6401ceb299c0caae366d8397bba9d4e9beb25a05efb0f0f4f91254c"
+    },
+    {
+      "path": "app/public/persistence.js",
+      "bytes": 12484,
+      "sha256": "fba215e99512c6d113234f76ed23c7f093960f84c908ca912280c7af4b26af77"
+    },
+    {
+      "path": "app/public/replacement.js",
+      "bytes": 7956,
+      "sha256": "58cb9185e6060dee4ad4e019249706475c622ca3aa6846e59a049fce94919920"
     },
     {
       "path": "app/public/state.js",
@@ -97,8 +112,8 @@
     },
     {
       "path": "app/public/styles.css",
-      "bytes": 59103,
-      "sha256": "1f2725518ed775d65c8e986d28c0d0086e1c2f0860f44cb5484f2038870d32b9"
+      "bytes": 61053,
+      "sha256": "dc3f863c0741fda3ba464d4b3b407d6fc9a6cbbbed08183da2ee2b719bf83617"
     },
     {
       "path": "app/qloo-runtime.mjs",
@@ -111,9 +126,14 @@
       "sha256": "ecb6b60abb5de9732556e891e60563b4a7aa2bc2caee93fc83ae86e46cc9f8c6"
     },
     {
+      "path": "app/replacement.test.mjs",
+      "bytes": 7515,
+      "sha256": "2f62063d010231101d4145724b1d7145179da4b06fb943780334570797f2e9b0"
+    },
+    {
       "path": "app/server.mjs",
-      "bytes": 28984,
-      "sha256": "2cb5551995d2e5350f1534d94ee67ba29b82c0a4439c020c647524db2fefdffa"
+      "bytes": 29138,
+      "sha256": "7aafe08bbe26c7fe4e15c67eef6babdf5c83c1fea702d8bb4383908013330c3a"
     },
     {
       "path": "app/taste-service.mjs",
@@ -131,19 +151,24 @@
       "sha256": "9bea0c4cffd8dcadf0bed67c0cbca8b0ec8d0761ff1fbb049c48a0b13417273e"
     },
     {
+      "path": "docs/decision-audit.md",
+      "bytes": 11204,
+      "sha256": "3b71d43227fe36dfaae4c20c760ece0d6a43820730d443e4b8bdec0970fd850c"
+    },
+    {
       "path": "docs/deployment.md",
-      "bytes": 37523,
-      "sha256": "84ce83114824b10ee7d391ea6f24e2aeb45d356eed398991cf9d6c8fcf645045"
+      "bytes": 39182,
+      "sha256": "cf24c554976e7d81a2f6c9d9e7e6abb125e61b958cdd39dca8f2110df8d08ec9"
     },
     {
       "path": "docs/judge-demo.md",
-      "bytes": 11985,
-      "sha256": "ae4f2e5bfd3352dc79a6811a7b52d7825ff221e08d87da0bd264a7434ec6b9fd"
+      "bytes": 9289,
+      "sha256": "e89b99d948f5ebf4a5b558739fa94198cddcda0f80684448dc126349c1274604"
     },
     {
       "path": "docs/submission-draft.md",
-      "bytes": 12144,
-      "sha256": "6e54ffef2e39240d173f9270c7b63d31892f67de0e3b80daba198ceac6d44365"
+      "bytes": 10918,
+      "sha256": "001ed9b1346ddc21fcbe2d7444ec050fc1c611e176b0ba14ceb23019151391bb"
     },
     {
       "path": "LICENSE",
@@ -157,13 +182,13 @@
     },
     {
       "path": "package.json",
-      "bytes": 1415,
-      "sha256": "756e35a31ffae85392c28bc4b2ad24b53162c1fa852774ff63682d277542891c"
+      "bytes": 1565,
+      "sha256": "701f82d8db5cd9784f6dfd7a2a358fa6c8fbc6eaac68b1c29e049f9dbcaa7eac"
     },
     {
       "path": "README.md",
-      "bytes": 19067,
-      "sha256": "6e80766ddd48e1bb18c739f2877ac46e935657e8ab0f24f2c5afbbf67293811a"
+      "bytes": 16730,
+      "sha256": "940ab4526e5fb4c40d18f142d473ec026037d62b72bd07c5157512a2f9eebc78"
     },
     {
       "path": "release/.dockerignore",
@@ -192,8 +217,8 @@
     },
     {
       "path": "release/package.json",
-      "bytes": 1200,
-      "sha256": "2dd97075eeb7b4d7f2e0913a36b717e626d8e12d3803b7b6c199b693a1fcf9b5"
+      "bytes": 1280,
+      "sha256": "948425cfb2bf7c22db80b43d0149462b57709ec7b7ff3ccbc142a90de3cc501d"
     },
     {
       "path": "release/public-smoke.test.mjs",
@@ -202,8 +227,8 @@
     },
     {
       "path": "release/README.md",
-      "bytes": 19067,
-      "sha256": "6e80766ddd48e1bb18c739f2877ac46e935657e8ab0f24f2c5afbbf67293811a"
+      "bytes": 16730,
+      "sha256": "940ab4526e5fb4c40d18f142d473ec026037d62b72bd07c5157512a2f9eebc78"
     },
     {
       "path": "release/synthetic-data.json",
@@ -219,6 +244,16 @@
       "path": "scripts/check-assistant.test.mjs",
       "bytes": 2534,
       "sha256": "c026108d25c5459ae80bacc18feab5900f76c6a48cd655d86f096c1e825d2cac"
+    },
+    {
+      "path": "scripts/decision-audit.mjs",
+      "bytes": 22249,
+      "sha256": "22ab56dcda04b7297714a52f9ff1565e44429e9bdd4209eb9f9b6c7eb369bd21"
+    },
+    {
+      "path": "scripts/decision-audit.test.mjs",
+      "bytes": 12135,
+      "sha256": "915e5fa6bfdb6158abf4a2d29e5e14ea6d62a4759a4303ea2b50dee97136cb97"
     },
     {
       "path": "scripts/docker-verify.mjs",
@@ -242,8 +277,8 @@
     },
     {
       "path": "scripts/public-export.mjs",
-      "bytes": 10618,
-      "sha256": "b55b7651d31e9715726e9bc9bd61684dcbdffe98bb2f074200334b1607dff68d"
+      "bytes": 10782,
+      "sha256": "a1a95920f0d847d97b2d7c1d8aff683d561eee7f5611ceb1f3a6ede804908ff4"
     },
     {
       "path": "scripts/public-provision.mjs",

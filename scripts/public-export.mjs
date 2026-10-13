@@ -5,15 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const MODULES = ['server.mjs', 'programme-service.mjs', 'agent-service.mjs', 'demo-service.mjs', 'taste-service.mjs', 'qloo-runtime.mjs', 'public-access.mjs'];
-const ASSETS = ['index.html', 'app.js', 'state.js', 'styles.css', 'favicon.svg'];
+const ASSETS = ['index.html', 'app.js', 'state.js', 'persistence.js', 'replacement.js', 'styles.css', 'favicon.svg'];
 const RUNTIME_SCRIPTS = ['reelbalance-solver.mjs', 'qloo-fetch-guard.mjs', 'setup-openai.mjs',
   'public-export.mjs', 'public-start.mjs', 'public-provision.mjs', 'public-rehearse.mjs',
-  'provider-admin.mjs', 'check-assistant.mjs', 'docker-verify.mjs', 'patch-qloo-dependencies.mjs'];
+  'provider-admin.mjs', 'check-assistant.mjs', 'docker-verify.mjs', 'patch-qloo-dependencies.mjs', 'decision-audit.mjs'];
 const QLOO_SECURITY_METADATA = ['scripts/qloo-security/package.json', 'scripts/qloo-security/package-lock.json'];
 const RELEASE_ASSETS = ['synthetic-data.json', 'README.md', 'package.json', '.env.example', '.gitignore', 'Dockerfile', '.dockerignore', 'public-smoke.test.mjs', '.github/workflows/check.yml'];
-const OPTIONAL_TESTS = ['public-access.test.mjs', 'public-http.test.mjs', 'public-ui.test.mjs', 'qloo-runtime.test.mjs', 'taste-service.test.mjs'];
-const OPTIONAL_SCRIPT_TESTS = ['provider-admin.test.mjs', 'check-assistant.test.mjs'];
-const OPTIONAL_DOCS = ['submission-draft.md', 'judge-demo.md', 'deployment.md'];
+const OPTIONAL_TESTS = ['public-access.test.mjs', 'public-http.test.mjs', 'public-ui.test.mjs', 'qloo-runtime.test.mjs', 'taste-service.test.mjs', 'programme-persistence.test.mjs', 'replacement.test.mjs'];
+const OPTIONAL_SCRIPT_TESTS = ['provider-admin.test.mjs', 'check-assistant.test.mjs', 'decision-audit.test.mjs'];
+const OPTIONAL_DOCS = ['submission-draft.md', 'judge-demo.md', 'deployment.md', 'decision-audit.md'];
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) &&
   Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));

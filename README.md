@@ -1,24 +1,27 @@
 # ReelBalance
 
-Keep a film season together when plans change.
+Keep the agreed nights. Repair the programme.
 
-ReelBalance helps a film-club organiser choose a two- or three-night programme, preserve locked nights after a cancellation, and inspect an optional runtime change before approving it. Qloo supplies cross-domain taste evidence from three declared music interests; a deterministic planner enforces the brief, and a bounded AI assistant explains proposals. Every programme change needs the organiser's approval.
+ReelBalance helps a small adult film-club organiser build a two- or three-night programme, then replace an unavailable film without disturbing agreed nights. Qloo ranks a curated 20-film pool against three declared music interests. The planner checks the runtime limit, exclusions and locked night positions; Luna explains the proposal, and the organiser approves every change.
 
-The external demo and optional 1:33 video are linked from the Devpost submission. The app uses genuine privately cached Qloo evidence, live Luna interactions and an optional labelled recorded walkthrough. On 11 October 2026, the hosted organiser workflow collected three fresh Qloo movie rankings and completed two live Luna interactions using four OpenAI requests. Its approved repair preserved Nights 1 and 3, kept the 110-minute per-film limit and restored original top-five support for all three references before export. The video shows that session with AI narration and disclosed editing; it uses no saved Luna replay. The current `reelbalance:public-access-ui-20261012` image is deployed and was healthy at verification. The full anonymous public workflow and optional reserved judge access passed live checks on 12 October.
+The published demonstration follows a concrete repair. Moonrise Kingdom, Whiplash and Frances Ha initially give all three references an original top-five film. With Nights 1 and 3 locked, cancelling Whiplash leaves two of three references supported. Short Term 12 restores the third reference through its original rank five for Anoushka Shankar. Both agreed nights and the 110-minute per-film limit stay in place, and the organiser approves and exports the result.
 
-This repository contains the complete application source and invented setup fixtures. Genuine Qloo responses, recorded model replies and credentials stay outside the public source and container image.
+The external demo and unchanged 1:33 video are linked from Devpost. The video uses genuine hosted-app calls from 11 October 2026: three fresh Qloo movie rankings and two live Luna interactions, using four OpenAI requests. It includes AI narration and disclosed editing, with no saved Luna replay. The full anonymous custom-artist workflow and optional reserved judge access subsequently passed live checks on 12 October.
+
+This repository contains the complete application and invented setup fixtures. Genuine Qloo responses, recorded model replies and credentials remain outside the public source and container image.
 
 ## What the app does
 
-- Builds a season from a vetted 20-film shortlist, within the chosen runtime limit.
-- Preserves locked films in their approved night positions when another film becomes unavailable.
-- Shows which declared tastes have original top-five ranking support, including missing evidence and support shortfalls.
-- Keeps a proposed runtime increase separate until explicitly approved.
-- Exports an HTML programme sheet with the approved order, evidence mode and source notes.
+- Builds and repairs a programme within a runtime limit, preserving locked films in their approved night positions.
+- Shows original top-five support, unknown ranks and support shortfalls. A separate runtime increase needs its own approval.
+- Explains **Why this replacement?** using the removed title, preserved choices and original ranking evidence, including why higher-ranked candidates may be unavailable or too long.
+- Saves the brief, approved order, locks, exclusions and prepared artist-collection checkpoint in this browser when storage is available. Reload revalidates the current catalogue and cached evidence; pending proposals, assistant replies and authentication are not restored.
+- Offers a ready example, explicit custom-artist collection, useful waiting and error states, keyboard focus handling and polite operation-status announcements.
+- Exports an approved HTML programme sheet with night order, original ranks, runtime notes and source caveats.
 
-Ranking support describes the evidence, not a probability of enjoyment. Film-copy runtimes, availability and screening rights need organiser confirmation.
+The pool was curated from the original example references' Qloo film suggestions and checked for film identity and runtime. Custom artists rerank that same pool; they do not discover a new catalogue. The three references are declared interests, not member votes or measured audience segments. Top-five support is a planning policy, not an enjoyment probability. Adoption, time savings and attendance have not been measured. Screening availability, rights and exact film-copy runtimes still need organiser confirmation.
 
-The synthetic sample is for running and testing the code. Its film titles, music references, runtimes, IDs and ordinal ranks are invented. It demonstrates the manual planner and approval flow; it does not demonstrate Taste AI accuracy or qualify as the genuine competition demo.
+All features are public on the competition host. Optional **Judge sign in** adds reserved provider allowance. Completely new artists can require three searches and three rankings, with at least 60 seconds between live requests: about five minutes of waiting gaps, plus processing. Saved matches and rankings can be quicker; the ready example needs no new Qloo collection.
 
 ## Run the synthetic sample
 
@@ -28,38 +31,30 @@ Use Node.js 22.19.0 or newer. The manual sample needs no API keys or package ins
 npm start
 ```
 
-Open `http://127.0.0.1:4173/`. Propose a three-night programme, approve it, lock the first two nights, and mark the third title unavailable. Review the current-limit repair and the separate runtime alternative before approving either option. The source labels and programme sheet identify the evidence as synthetic.
-
-Run the portable tests and the clean-copy rehearsal:
+Open `http://127.0.0.1:4173/`. Build a three-night draft, approve it, lock the first two nights and mark the third film unavailable. Inspect the current-limit repair and the separate runtime alternative, then approve one and export its sheet. The source labels identify all sample titles, interests, runtimes, identities and ranks as invented. Synthetic mode keeps provider features disabled.
 
 ```sh
 npm test
 npm run runtime:rehearse
 ```
 
-The rehearsal copies only the public source allowlist into a temporary directory and checks the manual planning, cancellation, approval and export flow with external requests blocked. It does not read the original project's private assets or usage ledgers.
+The rehearsal uses a clean copy of the public allowlist and checks the synthetic manual workflow with external requests blocked. It does not read the original project's private evidence or provider ledgers. With Docker available, `npm run docker:verify -- --platform linux/amd64` checks the image offline under its test resource cap. Add `--dataset` and optional `--recording` private paths for genuine provisioning checks; synthetic checks do not verify live providers.
 
-With Docker available, `npm run docker:verify -- --platform linux/amd64` builds and checks the image under a 256 MiB memory cap with external requests blocked. Add `--dataset` and optional `--recording` private paths to check genuine provisioning. The default synthetic check does not verify genuine evidence or live providers.
+## Verification and limits
 
-On 10 October 2026, all 57 portable tests passed locally and in the Node.js 22 Linux image. On 11 October, the UI review passed 80 portable tests locally and in Linux, plus a clean-copy rehearsal of 52 manifest files, including the UI regression suite and Qloo security patch. The initial AMD64 and ARM64 images passed the synthetic and genuine private recorded workflows under a 256 MiB memory/swap cap and 0.5 CPU, with no provider requests. Three artist searches and three fresh movie rankings completed through organiser access on 11 October. The 12 October judge-access revision passed 102 tests locally and in offline Linux checks under the original 256 MiB cap and 0.5 CPU. Its `reelbalance:judge-access-20261012` deployment retained existing private evidence and provider counters and made no provider requests before the subsequent headroom revision replaced it.
+On 13 October 2026, all 179 portable tests passed locally and in Node.js 22 Linux under 512 MiB combined memory/swap and 0.5 CPU. The clean-copy rehearsal verified 61 public source and fixture files with external requests blocked. The healthy `reelbalance:programme-review-ux-20261013` deployment retained patched dependencies, private evidence, provider counters, credentials and existing allowances. Hosted desktop, 390×844 mobile and keyboard checks verified saving, safe reload, prepared custom-evidence recovery, replacement explanations, explicit approval and the programme sheet. The actual HTML download matched the canonical renderer. These release checks reused genuine completed Qloo evidence and made no new provider calls.
 
-Public guest manual and recorded workflows, export and one live assistant interaction passed external checks on 10 October. The 12 October fresh public-browser check completed one live Luna interaction using three OpenAI requests, approval, cancellation with Nights 1 and 2 locked, explicit approval of the separate 117-minute option and an HTML download. Signed-in judge checks completed one fresh Qloo artist lookup and two live Luna interactions using four OpenAI requests, reusing genuine 11 October rankings without new ranking requests. The judge repair preserved Nights 1 and 3 and the 110-minute limit, supported all three references and exported its sheet. Judge checks left the public model pool and guest quota unchanged. The login dialog kept the existing public programme and locks and exposed the judge workspace without the guest message cap.
+The [controlled decision audit](docs/decision-audit.md) compares three deterministic policies on the same frozen rankings and constraints, with an exhaustive independent enumerator. Deliberately deleted ranks are reported separately as synthetic faults. The audit checks decision rules; it is not user testing, a generic-LLM comparison or proof that audiences prefer the films.
 
-A 12 October resource review found the original app container healthy, with no OOM or restarts. An isolated offline check of the judge-access image under 256 MiB and 0.5 CPU completed 200 mixed synthetic HTTP requests plus two setup requests at concurrency 10, with zero errors or provider requests, approximately 162 ms p95 and a 43.71 MiB memory peak including its Node.js load client. This does not measure live provider or Qloo subprocess peaks, or guarantee future capacity. The healthy `reelbalance:server-headroom-20261012` deployment raises the memory and combined memory/swap cap to 512 MiB, retains 0.5 CPU and extends the Qloo browser deadline from 35 to 45 seconds around the existing 40-second server CLI limit. Fourteen offline Linux UI tests passed before that deployment under the original caps. Private evidence, provider ledgers, daily allowances, active-operation guards and the 60-second Qloo gap are preserved. See the [resource review](docs/deployment.md#resource-review).
+For dated test/deployment evidence, resource limits, access configuration and safe operator recovery, see the [deployment guide](docs/deployment.md). Follow the [judge walkthrough](docs/judge-demo.md) or use the [submission copy template](docs/submission-draft.md).
 
-The full public backend was deployed healthy at 17:12:26 UTC on 12 October, retaining the prior eight private state files, genuine evidence and provider counts under 512 MiB and 0.5 CPU. It passed 139 offline Linux tests; a separate rollback compatibility revision passed 54 tests. That compatibility image supports the version-3 browser ledger and expanded cache. Roll back only to a reviewed compatible image such as `reelbalance:public-access-rollback-20261012`; older unpatched access decoders or cache limits cannot safely read the new state. Keep the current evidence and consumed counters during any rollback. The subsequent live verification is recorded below.
-
-The final UI image was deployed healthy at 17:27:27 UTC after 25 offline Linux UI tests under 512 MiB combined memory/swap and 0.5 CPU. It preserved the existing runtime, environment, private state and provider counts, with no deployment provider calls. Desktop and 390×844 mobile checks verified the prominent green **Judge sign in** button and popup explaining that all features are public and login adds reserved capacity, with the current programme kept.
-
-The full public live check completed at 17:28:23 UTC: one fresh Joni Mitchell search and one fresh movie ranking used two public Qloo requests, while Radiohead and Bill Evans rankings were reused from genuine cache. Two live public Luna interactions used six OpenAI attempts for planning and repair. Explicit approvals kept the 110-minute per-film limit, preserved Nights 1 and 3, replaced Night 2 and exported an HTML sheet matching the local renderer. Public activity left reserved pools unchanged. A separate judge explanation used two reserved OpenAI attempts and left the public pool and guest quota unchanged. The checked public session had 22 of 24 Luna interactions and 10 of 12 Qloo attempts remaining. No provider retries occurred. Two other public OpenAI attempts were accounted for separately from these verification calls.
-
-A GitHub Actions template is included at `release/.github/workflows/check.yml`. To enable automated checks, copy it to `.github/workflows/check.yml` using an account or token allowed to publish workflow files. It runs these commands on Node.js 22 without provider credentials. Automated repository checks are currently pending.
+A GitHub Actions template is included at `release/.github/workflows/check.yml`. To enable it, copy it to `.github/workflows/check.yml` with an account allowed to publish workflow files. It runs on Node.js 22 without provider credentials; repository automation is not enabled by this template alone.
 
 ## How it works
 
 | Component | Source | Responsibility |
 | --- | --- | --- |
-| Organiser workspace | `app/public/` | Brief, evidence, proposals, approval and printable export |
+| Organiser workspace | `app/public/` | Brief, evidence, proposals, approval, safe browser saving and printable export |
 | Deterministic planner | `app/programme-service.mjs`, `scripts/reelbalance-solver.mjs` | Runtime limits, exclusions, preserved locks and ranking support |
 | Agent loop | `app/agent-service.mjs` | Bounded model calls and evidence-bound planning tools |
 | Taste collection | `app/taste-service.mjs`, `app/qloo-runtime.mjs` | Explicit canonical artist lookup, private ranking cache and guarded Qloo calls |
@@ -145,7 +140,7 @@ The deployed public model pool is 180 OpenAI attempts per UTC day through `REELB
 
 **Judge sign in** provides optional extra capacity through a dedicated username/password login with a 24-hour session. Authenticated judges and organisers use separate reserved pools of 240 OpenAI attempts (`REELBALANCE_OPENAI_JUDGE_DAILY_LIMIT`) and 60 Qloo attempts (`REELBALANCE_QLOO_DAILY_LIMIT`) per UTC day. They have no guest interaction or Qloo browser cap. Public usage cannot consume reserved attempts. Each Luna interaction can use up to three OpenAI attempts. The single global provider-operation guard, Qloo spacing, provider failure pauses and lack of automatic retries remain in place.
 
-The full public UI and live workflow passed checks on 12 October. Provide optional judge credentials privately through the submission's testing instructions and preserve free access through judging. Dated checks do not guarantee future hosting or provider availability. `npm run assistant:check -- --origin https://your-app.example` inspects public assistant readiness without a provider call. `npm run operator:status` inspects both private model ledgers; the deployment guide gives the Docker command and reviewed recovery while the app is stopped, preserving consumed attempts.
+The full public live workflow passed checks on 12 October; the 13 October improvements are deployed and passed the release checks above. Provide optional judge credentials privately through the submission's testing instructions and preserve free access through judging. Dated checks do not guarantee future hosting or provider availability. `npm run assistant:check -- --origin https://your-app.example` inspects public assistant readiness without a provider call. `npm run operator:status` inspects both private model ledgers; the deployment guide gives the Docker command and reviewed recovery while the app is stopped, preserving consumed attempts.
 
 `public-manifest.json` lists the exported files, byte counts and SHA-256 hashes. Start any public repository from this exported directory with fresh history, after reviewing the manifest. The MIT license covers the code and invented fixtures; Qloo evidence and service access remain subject to their own terms.
 

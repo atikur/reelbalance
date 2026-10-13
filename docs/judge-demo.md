@@ -1,89 +1,74 @@
 # ReelBalance judge walkthrough
 
-Open the demo URL in the Devpost submission, or watch its linked 1:33 video. The public source is available at [atikur/reelbalance](https://github.com/atikur/reelbalance) under MIT.
+Use the demo and unchanged 1:33 video linked in the Devpost submission. The public source is [atikur/reelbalance](https://github.com/atikur/reelbalance), licensed under MIT. Every feature is public; optional judge sign-in adds reserved allowance.
 
-Updated on 12 October 2026. `reelbalance:public-access-ui-20261012` is deployed and was healthy at verification. The anonymous full public workflow passed live checks on 12 October, including a fresh Joni Mitchell lookup and ranking, live Luna planning and repair, explicit approvals, preserved locks and actual HTML export. Optional judge access used reserved capacity without consuming the public allowance. Desktop and 390×844 mobile checks verified the prominent judge button and popup with no horizontal overflow. Submission has not been confirmed.
+Updated on 13 October 2026. The healthy `reelbalance:programme-review-ux-20261013` release passed 179 local and offline Linux tests at 512 MiB and 0.5 CPU, a 61-file clean-copy rehearsal, and hosted desktop, mobile, keyboard, cached custom-evidence restoration, repair and export checks. The actual HTML download matched the canonical renderer. These checks used genuine existing evidence without new provider calls. The full anonymous live workflow and judge reserve also passed live checks on 12 October. Submission has not been confirmed.
 
-## Published live-call demonstration
+## The published repair
 
-The video uses the Radiohead, Bill Evans and Anoushka Shankar references, with three fresh Qloo movie-ranking requests and two live Luna interactions using four OpenAI requests. The initial approved programme is Moonrise Kingdom, Whiplash and Frances Ha. Nights 1 and 3 are locked, and Whiplash is marked unavailable for the demo scenario.
+The video uses Radiohead, Bill Evans and Anoushka Shankar as declared music references. Qloo ranked a fixed 20-film pool for each. Moonrise Kingdom, Whiplash and Frances Ha initially give all three references an original top-five film.
 
-The repair replaces Whiplash with Short Term 12, preserves both locked night positions and the 110-minute per-film limit, and restores original top-five support for all three references. The organiser reviews and approves the proposal before downloading the programme sheet.
+Nights 1 and 3 are locked; Whiplash is marked unavailable for the demonstration. Support drops from 3/3 to 2/3. Luna proposes Short Term 12, whose original Anoushka Shankar rank is five. It keeps both locked night positions and the 110-minute per-film limit. The organiser reviews and explicitly approves the repair, restoring 3/3 support, then downloads the programme sheet.
 
-This is edited real hosted-app footage from 11 October with English AI-generated narration. Waiting time is trimmed, the cancellation is staged, and some initial successful results are shown in same-session pickups after a recorder interruption. It uses no saved Luna replay. The public example can use different ranking evidence, so its exact film choices and repair trade-offs can differ from the video.
+This is real hosted-app footage from 11 October: three fresh Qloo movie rankings and two live Luna interactions using four OpenAI attempts, with no saved Luna replay. The cancellation is staged, waiting is trimmed and some successful initial results appear in same-session pickups after a recorder interruption. Narration is AI-generated. The video remains accurate; the newer saving and explanation features supplement its workflow.
 
-## Identify the source mode
+## Try the ready example
 
-| Mode | What it shows | New provider requests |
+1. Open the demo from Devpost in a fresh browser. Start with the supplied music references, three nights and the displayed per-film cap. The example's completed Qloo evidence is genuine; its exact choices may differ from the video.
+2. Choose **Plan with Luna** for a live proposal, or **Build draft manually** for deterministic planning. Inspect the proposed night order, original ranks and any support shortfall. Approve the programme.
+3. Lock two nights, then mark the remaining film unavailable. The approved choices stay in place while a repair is pending.
+4. Inspect **Why this replacement?**: removed and added films, kept nights, lost/restored support and higher-ranked candidates that are excluded or over the cap. The explanation is calculated from the same original ranks, without another provider request.
+5. Choose **Repair with Luna** or **Review programme manually** if another review is needed. Compare the current-limit option with any separate runtime alternative. Neither the limit nor the selection changes until its approval button is used.
+6. Approve one option, inspect its receipt and choose **Preview programme sheet → Download HTML sheet**. Confirm night order, original ranks, runtime notes and source caveats.
+
+For a live repair, send once: “Repair the cancelled night. Preserve my locked choices, keep the current runtime limit first, and explain any alternative.” Live wording can vary; the proposal and applied state establish the decision.
+
+## Check browser recovery
+
+After approval, set locks or mark a film unavailable, wait for **Programme saved in this browser**, then reload. The brief, approved order, locks, exclusions, name and note are saved when browser storage is available. An unresolved cancellation remains **Needs a review**; a pending proposal or assistant answer is not restored and no paid request is replayed.
+
+Reload verifies the current catalogue and, for custom references, reads the completed evidence from the server cache. It cannot substitute stale or unverified rankings. If verification fails, the saved version is retained with **Retry saved workspace** and **Start fresh** actions. A prepared artist collection can also resume from its server-held progress without automatically collecting another ranking.
+
+Browser saving is a local convenience, not an account or cloud backup. Private browsing, blocked storage or cleared site data can remove it. The app reports storage failure and detects a competing tab's saved version. **Reset example / Start fresh** deliberately clears the saved workspace. Recorded walkthroughs stay separate from it.
+
+## Choose custom artists
+
+The film pool was curated from the original example references' Qloo suggestions and checked for identity and runtime. Custom artists rerank these same 20 films rather than discover new titles. The three references are declared interests, not member votes or measured audience segments.
+
+1. Choose **Choose artists**. The panel explains that completely new references can take three searches and three rankings, with at least 60 seconds between live calls: about five minutes of waiting gaps, plus processing. Saved matches and rankings can be quicker.
+2. Type an artist, explicitly search and choose a canonical match. Typing makes no provider request. Confirm three distinct artists.
+3. Choose **Prepare film rankings**. Existing rankings are reused. For each pending artist, explicitly choose **Collect rankings for [artist]** and wait for the displayed next-request time. Nothing retries automatically.
+4. Inspect the scored-film counts and **Sources & request limits**. Close the panel to continue planning with the current evidence while waiting. Meaningful search/ranking starts, results, errors and readiness changes have polite status announcements; the countdown is not announced every second.
+5. When all three profiles are complete, choose **Start programme with these artists**. This is an explicit fresh-programme action: previous selections, locks and approvals are cleared. The completed evidence and prepared collection remain available for reuse.
+6. Plan, repair, approve and export with these profiles. No additional Qloo retrieval is needed for those decisions.
+
+## Understand the evidence
+
+| Mode | Source | New provider use |
 | --- | --- | --- |
-| Saved Qloo evidence | Genuine previously collected artist-to-movie rankings used by planning tools | None for planning, repair or export |
-| Live Luna | A new assistant interaction using the current brief, selected Qloo evidence and solver tools | Up to three OpenAI attempts per interaction |
-| Public or reserved live Qloo collection | Visitors explicitly look up canonical artists and rank the vetted film pool through a signed browser session; optional judge access adds reserved capacity | At most one Qloo request per explicit search or ranking action |
-| Recorded walkthrough | A labelled replay of genuine earlier Luna answers, with proposals checked against the current solver | None |
-| Synthetic setup fixture | Invented ranks and example facts for running the public source package | None; this is not Qloo evidence |
+| Ready example | Genuine previously collected Qloo rankings | No new Qloo collection |
+| Live Luna | A new assistant response using the brief, chosen evidence and planning tools | Up to three OpenAI attempts per interaction |
+| Custom artist collection | Explicit canonical search and ranking of the fixed film pool | At most one Qloo request per search/ranking action |
+| Recorded walkthrough | Clearly labelled earlier Luna replies | No new provider requests |
+| Synthetic setup | Invented titles, references, facts and ranks | Provider features disabled |
 
-Support means that at least one selected film is in a reference's original top five. Filtering never promotes a lower-ranked film into that top five. Missing ranks remain unknown. Support describes the evidence, not a probability of audience enjoyment.
+A reference is supported when at least one usable selected film lies in its **original top five**. Filters never promote a lower-ranked film into that top five. Missing ranks stay unknown. Support does not predict enjoyment, fairness to actual members or attendance. Film-copy availability, screening rights and exact runtimes need organiser confirmation.
 
-## Public guest workflow
+The [controlled decision audit](decision-audit.md) compares deterministic policies on the same frozen input and constraints, checks feasible choices independently and reports deliberate missing-rank faults separately. It establishes decision-rule behavior within this pool; it is not an audience study or a generic-LLM comparison.
 
-The full public setup needs no login: the app issues a signed browser session for the example, custom artists, live planning, repair, approvals and export. Public allowances are 24 Luna interactions per browser session per UTC day within a pool of 180 OpenAI attempts, and 12 Qloo attempts per browser session per UTC day within a separate public pool of 120 attempts. Each Luna interaction can use up to three OpenAI attempts. This full public path passed live verification on 12 October.
+## Optional judge allowance
 
-1. Open the demo URL from the Devpost submission in a fresh browser. Start with the example three-night brief and its displayed per-film runtime limit. Inspect the source notes for the selected evidence.
-2. Choose **Plan with Luna** for a live assistant proposal, or **Build draft manually** for the local planning tools. Inspect the proposed order, original-rank support and unknown results. Approve the programme.
-3. Use **Lock choice** on the first two nights, then **Mark unavailable** on the third film. The cancelled film should be excluded while the locked films retain their night positions.
-4. Choose **Repair with Luna**, or **Review programme manually**, under the current brief. Inspect the support result and the separate runtime option, if one is offered. The current brief stays unchanged while an option is pending.
-5. Approve either the current-limit repair or the displayed runtime alternative. Inspect the receipt: locked night positions remain, and any limit change is explicit.
-6. Choose **Preview programme sheet**, then **Download HTML sheet**. Confirm the approved order, evidence mode, original ranks, runtime notes and limitations are preserved.
+Choose the prominent green **Judge sign in** button and enter the credentials supplied privately in Devpost. The popup explains that all features are already public and login adds reserved capacity. Sign-in keeps the current programme and lasts 24 hours. Credentials do not grant owner administration or expose provider keys.
 
-For a live repair, send once: “Repair the cancelled night. Preserve my locked choices, keep the current runtime limit first, and explain any alternative.” Live wording can vary; inspect the proposal and applied state. If live access is unavailable, the manual tools remain usable with completed evidence.
+| Access | Luna | Qloo |
+| --- | --- | --- |
+| Public | 24 interactions per browser session/day within 180 OpenAI attempts/day | 12 attempts per browser session/day within 120 public attempts/day |
+| Judges and organisers | 240 reserved OpenAI attempts/day, without the guest interaction cap | 60 reserved attempts/day, without the guest browser cap |
 
-## Optional recorded walkthrough
+Daily limits use UTC. Public calls cannot consume reserved attempts. One provider operation runs at a time; Qloo calls remain at least 60 seconds apart. Failures pause access and requests never retry automatically. These are application safeguards, not provider quotas or a guarantee of future availability. Cache limits, provisioning and operator recovery are in the [deployment guide](deployment.md).
 
-The separate recorded scenario uses genuine preserved answers and is labelled recorded. It does not make new Qloo or OpenAI requests.
+## Verification status
 
-1. Choose **Open recorded walkthrough** and inspect the unapproved draft. The app keeps your existing programme while you explore this separate example.
-2. Choose **Approve this programme**, then **Stage cancellation · keep Nights 1 & 2**.
-3. Compare the current-limit repair and separate runtime option. Inspect the original-rank evidence.
-4. Approve a choice, inspect the retained night positions and receipt, then export the sheet.
+The 12 October full public check used a fresh Joni Mitchell search and ranking plus cached Radiohead and Bill Evans profiles. Two Qloo calls and two live Luna interactions using six OpenAI attempts completed explicit planning/repair approvals, preserved Nights 1 and 3, kept the 110-minute cap and produced a matching HTML export. A separate judge explanation used only reserved capacity. These dated checks establish technical behavior, not organiser adoption or audience outcomes.
 
-**Restart walkthrough** returns to the recording's unapproved draft; **Return to my programme** restores your workspace. If a recording is unavailable, the app reports that state.
-
-## Further checks
-
-- Reduce the programme to two nights and inspect any support shortfall.
-- Set a runtime below a locked film's duration. The conflict should remain visible, with any higher-limit proposal pending until approval.
-- Compare a film's planning runtime with its source note. The export retains any difference from a primary listing.
-
-Screening rights, actual copy availability and exact runtimes need organiser confirmation before a real event.
-
-## Public custom artists
-
-This capability retains the same vetted 20-film pool; it ranks those films for new references rather than discovering a new catalogue. Three genuine artist searches and three fresh movie rankings completed on 11 October. The published video uses the resulting evidence; planning and repair reuse those completed rankings.
-
-1. Open the demo in a fresh browser to receive a signed public session. Custom artist collection is enabled by the host's `REELBALANCE_PUBLIC_CUSTOM=1` setting; no login is required for the full public workflow.
-2. Choose **Choose artists**, then **Check availability**. Typing makes no request. Reuse a saved canonical match or explicitly search a public artist name and confirm its entity.
-3. Confirm three distinct artists and choose **Prepare film rankings**. Saved rankings are reused. For each pending artist, **Collect rankings for [artist]** makes at most one guarded request. Wait for the displayed next-request time; no request retries automatically.
-4. Inspect provenance, scored-film counts and unknown ranks in **Sources & request limits**. When all three are ready, choose **Start programme with these artists**. This starts a fresh workspace and clears previous selections, locks and approvals.
-5. Build or repair with the completed evidence, approve a proposal and export its sheet. These actions make no additional Qloo requests.
-
-New responses stay in the private server cache and completed evidence is retained for reuse. The cache is bounded at 8 MiB, 1,200 artist searches, 600 three-artist selections and 1,200 rankings. Public entry admission stops at 1,000 searches, 500 selections and 1,000 rankings, leaving entry capacity for authenticated judges and organisers. At a limit, existing evidence remains available; the app does not silently discard it to make room. Configuration and private provisioning are documented in [deployment.md](deployment.md).
-
-## Optional judge sign-in for extra capacity
-
-The full public workflow does not need a password. If the submission supplies extra judge credentials privately, choose the prominent green **Judge sign in** button. Its popup explains that every feature is already public and login adds reserved capacity. Enter the supplied username and password, then choose **Sign in**. Opening the popup keeps the current programme; successful sign-in opens a 24-hour session. Sign in again after it expires. Judge credentials do not grant owner administration or expose provider keys.
-
-Judges and organisers share extra reserved pools of 240 OpenAI attempts and 60 Qloo attempts per UTC day. Public usage cannot consume those reserved attempts. Authenticated users have no guest Luna or Qloo browser caps. The one global provider-operation guard, minimum 60-second Qloo gap, failure pauses and absence of automatic retries still apply.
-
-The earlier judge login passed external checks on 12 October: it kept the public programme and locks, displayed **Judge workspace** and enabled custom controls. These are dated observations of the earlier judge-access revision.
-
-The final UI's desktop and mobile checks also verified the prominent button and capacity explanation. A live judge explanation used one interaction and two reserved OpenAI attempts, leaving the public pool and guest quota unchanged.
-
-## Verified access and remaining submission steps
-
-The full public backend uses 180 OpenAI attempts per UTC day, 24 Luna interactions per browser session per day, 120 public Qloo attempts per day and 12 Qloo attempts per browser session per day. Optional judges and organisers retain reserved pools of 240 OpenAI attempts and 60 Qloo attempts, without guest caps. Qloo attempts remain at least 60 seconds apart, failures pause provider access and nothing retries automatically. These are application safeguards, not provider quotas or guarantees of availability.
-
-On the earlier 12 October judge-access revision, a fresh public browser completed one live Luna interaction using three OpenAI requests, approval, locks on Nights 1 and 2, cancellation of Night 3, review under the unchanged 110-minute brief, explicit approval of the separate 117-minute option and an actual HTML download. Judge checks passed login and logout, verified the then-required authentication for custom routes, completed one fresh Nina Simone lookup and two live Luna interactions using four OpenAI requests, and preserved Nights 1 and 3 with a 110-minute limit, all three references supported and an exported sheet. The checks reused genuine 11 October rankings, made no new ranking requests, and left the public pool and guest quota unchanged. They do not verify the new anonymous custom workflow.
-
-The final full public check on 12 October used a fresh Joni Mitchell search and ranking plus cached Radiohead and Bill Evans profiles. It made two public Qloo requests and two public Luna interactions using six OpenAI attempts. Explicit planning and repair approvals kept the 110-minute per-film limit, preserved locked Nights 1 and 3, replaced Night 2 and downloaded an HTML sheet matching the local renderer. The checked guest session had 22 of 24 Luna interactions and 10 of 12 Qloo attempts remaining. Public calls left reserved pools unchanged; the separate judge explanation left public and guest allowances unchanged. No provider retries occurred.
-
-The published video is unchanged. Final UI and full live public checks are complete; submission has not been confirmed. Optional judge credentials can be delivered privately for extra capacity. Preserve free access through the end of judging; the dated checks do not guarantee future hosting or provider availability. [Official access rules](https://qloo.devpost.com/rules).
+The 13 October tests, deployment and hosted checks are complete. Keep the demo and optional judge access freely available through judging. [Official rules](https://qloo.devpost.com/rules)
